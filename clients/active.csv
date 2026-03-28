@@ -1,0 +1,3 @@
+id,timestamp,name,platform,followers,email,investment,tier,start_date,end_date,status,revenue_generated,case_study
+1,2023-01-01,Alex,Facebook,1000,alex@example.com,500,Gold,2023-01-01,,Active,1000,Yes
+2,2026-03-28,Alex,TikTok,45000,alex@example.com,990,quick_flip,2026-03-28,,Active,990,Yes

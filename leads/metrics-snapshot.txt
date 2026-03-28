@@ -1,0 +1,10 @@
+{
+  "date": "2026-03-28",
+  "weekLeads": 0,
+  "todayLeads": 0,
+  "bookedCalls": 0,
+  "closes": 0,
+  "revenue": 0,
+  "pipeline": 0,
+  "impliedPipeline": 0
+}
