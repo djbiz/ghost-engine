@@ -1,56 +1,134 @@
-# 👻 Ghost Engine
+# Ghost Engine
 
-> AI-powered monetization engine for creators and operators.
-> Finds attention. Builds funnels. Closes revenue.
+**AI System That Turns Creator Attention Into Revenue**
 
-## What It Does
+---
 
-Ghost Engine is a self-reinforcing revenue machine that:
-- **Finds** qualified creators with monetization gaps
-- **Scores** leads based on revenue potential  
-- **Engages** via email + LinkedIn (post-sandbox)
-- **Converts** with precision DM sequences
-- **Evolves** through daily learning loops
+## ⚠️ The Problem
 
-## Quick Start
+Most creators don't have a growth problem.
 
-```bash
-# Clone
-git clone https://github.com/djbiz/ghost-engine.git
-cd ghost-engine
+They have a monetization problem.
 
-# Add your first lead
-node scripts/outreach-engine.js add-lead "Creator Name" "email@example.com" "TikTok" "50000"
+They're posting daily. Getting views. Building followers.
 
-# Score and send
-node scripts/outreach-engine.js score-lead
-node scripts/outreach-engine.js send-batch 10
+But when it comes to making money?
 
-# Check status
-node scripts/command-layer.js status
+Nothing happens.
+
+---
+
+## ⚔️ The Solution
+
+Ghost Engine is a multi-agent AI system that:
+
+- Finds creators with monetization gaps
+- Starts conversations automatically
+- Qualifies and books calls
+- Closes deals using proven frameworks
+- Builds backend systems that turn attention into revenue
+- Learns from every interaction and improves daily
+
+---
+
+## 🧠 How It Works
+
+| Agent | Role |
+|-------|------|
+| 🧲 Lead Hunter | Finds and scores creators daily |
+| ⚔️ Closer Engine | Handles conversations + conversions |
+| 🏗️ Fulfillment System | Builds monetization engines |
+| 🌙 Memory + Learning | Logs every win/loss → improves weekly |
+
+---
+
+## 📊 Live System
+
+- 5 agents running daily
+- 7 automation scripts active
+- CRM + outreach + closing fully integrated
+- Self-improving via memory + lessons learned
+
+---
+
+## 💰 What This Does
+
+Turns creators with:
+
+- 5K–100K followers
+
+Into:
+
+- Monetized operators with real backend revenue
+
+---
+
+## 🚀 Status
+
+**Live. Running. Evolving daily.**
+
+---
+
+## 📩 Want This Built For You?
+
+If you're a creator sitting on attention but not monetizing it — you already know.
+
+👉 [Book a discovery call](https://derekjamieson29.zo.space/ghost-engine/book)
+
+---
+
+## 💣 Why This Works
+
+Not dev talk. Not fluff.
+
+Straight problem → solution → proof → CTA.
+
+👉 This converts curiosity into leads.
+
+---
+
+## 🔬 System Architecture
+
+```
+Lead Hunter (7:30 AM)
+    ↓
+Qualified Lead → Outreach Engine
+    ↓                 ↓
+Email/DM Sent    Apollo Intent Sniper
+    ↓
+Response Tracked → CRM Updated
+    ↓
+Hot Lead → Closer Engine
+    ↓
+Call Booked → Revenue
+    ↓
+Fulfillment → Case Study
+    ↓
+Proof Loop → More Traffic
 ```
 
-## Architecture
+---
+
+## 📁 What's Inside
 
 ```
-ghost-engine/
-├── system/          # 3-layer memory (Felix-style)
-├── daily/           # Daily notes + template
-├── commands/        # Command layer (DOUBLE DOWN/KILL/TEST)
-├── scripts/         # Outreach, CRM, scoring, automation
-├── assets/          # Ad creatives, DM templates, case studies
-└── leads/           # CRM data
+/system        — Felix-style 3-layer memory + boot
+/scripts       — 24 operational scripts
+/assets        — Content bank, DM templates, ad creatives  
+/commands      — Command layer (DOUBLE DOWN / KILL / TEST)
+/leads         — CRM + scored leads
+/offers        — Quick Flip + Full Engine offer templates
+/proof         — Case study templates
 ```
 
-## The Stack
+---
 
-- **Zo Computer** — AI operating system
-- **Apollo** — Lead discovery + enrichment  
-- **Stripe** — Payment processing
-- **GetResponse** — Email nurture
-- **LinkedIn** — Social selling (post-sandbox)
-- **Rube** — Cross-app automation
+## 🎯 Results
 
-## License
+First outreach batch: 10 emails sent
+Hot leads identified: 3 (scores 94/97/90)
+System: fully operational
 
-MIT — Build your own Ghost Engine.
+---
+
+*Built by [@derekjamieson](https://twitter.com/derekjamieson) — Running since March 2026*
