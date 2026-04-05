@@ -1,134 +1,52 @@
 # Ghost Engine
 
-**AI System That Turns Creator Attention Into Revenue**
+**AI Monetization Engine for Creators** — by Derek Jamieson, powered by Zo (AI COO).
 
----
+## What is Ghost Engine?
 
-## ⚠️ The Problem
+Multi-agent AI turning creator attention into revenue. Zo runs 7 agents + 31 scripts.
+Target: creators 10K-100K followers with no backend revenue.
 
-Most creators don't have a growth problem.
+## Architecture
 
-They have a monetization problem.
+Zo → Memory (SOUL/IDENTITY/BOOTSTRAP.md) + 7 Agents + Execution (31 scripts, Stripe, GetResponse, Calendly, LinkedIn API)
 
-They're posting daily. Getting views. Building followers.
-
-But when it comes to making money?
-
-Nothing happens.
-
----
-
-## ⚔️ The Solution
-
-Ghost Engine is a multi-agent AI system that:
-
-- Finds creators with monetization gaps
-- Starts conversations automatically
-- Qualifies and books calls
-- Closes deals using proven frameworks
-- Builds backend systems that turn attention into revenue
-- Learns from every interaction and improves daily
-
----
-
-## 🧠 How It Works
-
-| Agent | Role |
-|-------|------|
-| 🧲 Lead Hunter | Finds and scores creators daily |
-| ⚔️ Closer Engine | Handles conversations + conversions |
-| 🏗️ Fulfillment System | Builds monetization engines |
-| 🌙 Memory + Learning | Logs every win/loss → improves weekly |
-
----
-
-## 📊 Live System
-
-- 5 agents running daily
-- 7 automation scripts active
-- CRM + outreach + closing fully integrated
-- Self-improving via memory + lessons learned
-
----
-
-## 💰 What This Does
-
-Turns creators with:
-
-- 5K–100K followers
-
-Into:
-
-- Monetized operators with real backend revenue
-
----
-
-## 🚀 Status
-
-**Live. Running. Evolving daily.**
-
----
-
-## 📩 Want This Built For You?
-
-If you're a creator sitting on attention but not monetizing it — you already know.
-
-👉 [Book a discovery call](https://derekjamieson29.zo.space/ghost-engine/book)
-
----
-
-## 💣 Why This Works
-
-Not dev talk. Not fluff.
-
-Straight problem → solution → proof → CTA.
-
-👉 This converts curiosity into leads.
-
----
-
-## 🔬 System Architecture
+## Quick Start
 
 ```
-Lead Hunter (7:30 AM)
-    ↓
-Qualified Lead → Outreach Engine
-    ↓                 ↓
-Email/DM Sent    Apollo Intent Sniper
-    ↓
-Response Tracked → CRM Updated
-    ↓
-Hot Lead → Closer Engine
-    ↓
-Call Booked → Revenue
-    ↓
-Fulfillment → Case Study
-    ↓
-Proof Loop → More Traffic
+git clone https://github.com/djbiz/ghost-engine.git && cd ghost-engine
+npm install && cp .env.example .env && npm start
 ```
 
----
+## Directory Structure
 
-## 📁 What's Inside
+system/ scripts/ leads/ offers/ sequences/ proof/ commands/ daily/ clients/ assets/
 
-```
-/system        — Felix-style 3-layer memory + boot
-/scripts       — 24 operational scripts
-/assets        — Content bank, DM templates, ad creatives  
-/commands      — Command layer (DOUBLE DOWN / KILL / TEST)
-/leads         — CRM + scored leads
-/offers        — Quick Flip + Full Engine offer templates
-/proof         — Case study templates
-```
+## Agents
 
----
+1. Lead Hunter 7:30AM 2. Closer 9AM 3. Fulfillment 11AM 4. Consolidator 11PM 5. Sunday Evolution 8PM Sun 6. LinkedIn Daily 9AM 7. LinkedIn Outreach 9AM
 
-## 🎯 Results
+## Offer Tiers
 
-First outreach batch: 10 emails sent
-Hot leads identified: 3 (scores 94/97/90)
-System: fully operational
+Quick Flip $990/48hrs | Full Engine $4,970/14d | Ghost Partner $9,700+15%/90d
+Monthly: 16 closes = $49,180
 
----
+## Daily Heartbeat
 
-*Built by [@derekjamieson](https://twitter.com/derekjamieson) — Running since March 2026*
+7:30AM Hunt → 9AM Close+LinkedIn → 11AM Fulfill → 11PM Consolidate → Sun Evolve
+
+## 30-Day Phases
+
+1.Close Heavy $10-20K 2.Proof 3.Inbound 4.High-Ticket $50K
+
+## Environment Variables
+
+OPENAI_API_KEY GETRESPONSE_API_KEY STRIPE_SECRET_KEY CALENDLY_TOKEN LINKEDIN_ACCESS_TOKEN TIKTOK_API_KEY YOUTUBE_API_KEY
+
+## Tech Stack
+
+Node.js Python GetResponse Stripe Calendly LinkedIn TikTok YouTube
+
+## License
+
+Proprietary (c) 2025 Derek Jamieson.
