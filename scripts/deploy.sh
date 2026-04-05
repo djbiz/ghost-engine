@@ -2,32 +2,36 @@
 set -euo pipefail
 
 APP_DIR="/opt/ghost-engine"
-LOG_FILE="$APP_DIR/deploy.log"
+LOG_DIR="$APP_DIR/logs"
+LOG_FILE="$LOG_DIR/deploy.log"
+HEALTH_BASE="${DEPLOY_URL:-http://127.0.0.1:3000}"
+HEALTH_URL="${HEALTH_BASE%/}/health"
 
-echo "========================================" >> "$LOG_FILE"
-echo "[$(date -u '+%Y-%m-%d %H:%M:%S UTC')] Deploy started" >> "$LOG_FILE"
+mkdir -p "$LOG_DIR"
 
-cd "$APP_DIR"
+{
+  echo "========================================"
+  echo "[$(date -u '+%Y-%m-%d %H:%M:%S UTC')] Deploy started"
 
-# Pull latest code
-git fetch origin master
-git reset --hard origin/master
+  cd "$APP_DIR"
+  git fetch origin master
+  git reset --hard origin/master
+  npm ci
+  pm2 reload ecosystem.config.js --env production --update-env || pm2 start ecosystem.config.js --env production --update-env
+  pm2 save
 
-# Install production dependencies
-npm ci --production
+  sleep 5
+  for attempt in 1 2 3 4 5 6; do
+    STATUS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$HEALTH_URL" || echo '000')
+    if [ "$STATUS" = "200" ]; then
+      echo "[$(date -u '+%Y-%m-%d %H:%M:%S UTC')] Deploy complete - Health: $STATUS"
+      exit 0
+    fi
 
-# Ensure logs directory exists
-mkdir -p "$APP_DIR/logs"
+    echo "[$(date -u '+%Y-%m-%d %H:%M:%S UTC')] Health check attempt $attempt failed with $STATUS"
+    sleep 5
+  done
 
-# Reload PM2 processes (start if not running)
-pm2 reload ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production
-pm2 save
-
-# Health check
-sleep 5
-HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/health --max-time 10 || echo "000")
-echo "[$(date -u '+%Y-%m-%d %H:%M:%S UTC')] Deploy complete - Health: $HEALTH" >> "$LOG_FILE"
-
-if [ "$HEALTH" != "200" ]; then
-  echo "WARNING: Health check returned $HEALTH" >&2
-fi
+  echo "[$(date -u '+%Y-%m-%d %H:%M:%S UTC')] Deploy complete - Health: failed"
+  exit 1
+} >> "$LOG_FILE" 2>&1
