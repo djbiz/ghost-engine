@@ -1,0 +1,35 @@
+{
+  "name": "ghost-engine",
+  "version": "1.0.0",
+  "description": "AI-powered monetization engine for creators \u2014 powered by Zo, your autonomous AI COO",
+  "main": "scripts/pipeline-automation.js",
+  "scripts": {
+    "start": "node scripts/pipeline-automation.js",
+    "hunt": "node scripts/lead-hunter.js",
+    "outreach": "node scripts/outreach-engine.js",
+    "linkedin": "node scripts/linkedin-daily-engagement.js",
+    "kpi": "node scripts/kpi-dashboard.js",
+    "close": "node scripts/speed-close-trigger.js",
+    "momentum": "node scripts/momentum-controller.js",
+    "proof": "node scripts/proof-loop.js",
+    "launch": "node scripts/launch-countdown.js"
+  },
+  "keywords": [
+    "ai",
+    "monetization",
+    "creators",
+    "automation",
+    "ghost-engine",
+    "zo"
+  ],
+  "author": "Derek Jamieson",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "csv-parser": "^3.0.0",
+    "csv-writer": "^1.6.0",
+    "dotenv": "^16.3.0",
+    "node-cron": "^3.0.3",
+    "stripe": "^14.0.0"
+  }
+}
