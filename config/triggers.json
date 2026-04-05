@@ -1,0 +1,151 @@
+{
+  "scoreThresholds": {
+    "hot": 85,
+    "warm": 70,
+    "cold": 50
+  },
+  "triggers": [
+    {
+      "id": "hot-lead-alert",
+      "name": "Hot Lead Alert",
+      "condition": {
+        "field": "score",
+        "operator": ">=",
+        "value": 85
+      },
+      "action": {
+        "type": "alert",
+        "channel": "slack",
+        "message": "🔥 HOT LEAD: {name} score {score}"
+      },
+      "cooldownHours": 24,
+      "enabled": true
+    },
+    {
+      "id": "auto-outreach-tier-a",
+      "name": "Auto Outreach - Tier A",
+      "condition": {
+        "field": "tier",
+        "operator": "==",
+        "value": "A"
+      },
+      "action": {
+        "type": "queue-outreach",
+        "sequence": "tier-a-first-touch",
+        "channel": "linkedin",
+        "template": "first-touch"
+      },
+      "cooldownHours": 48,
+      "enabled": true
+    },
+    {
+      "id": "auto-outreach-tier-b",
+      "name": "Auto Outreach - Tier B",
+      "condition": {
+        "field": "tier",
+        "operator": "==",
+        "value": "B"
+      },
+      "action": {
+        "type": "queue-outreach",
+        "sequence": "tier-b-nurture",
+        "channel": "email",
+        "template": "nurture"
+      },
+      "cooldownHours": 72,
+      "enabled": true
+    },
+    {
+      "id": "re-engage-cold",
+      "name": "Re-engage Cold Lead",
+      "condition": {
+        "field": "status",
+        "operator": "==",
+        "value": "contacted",
+        "daysSinceContact": 7
+      },
+      "action": {
+        "type": "queue-outreach",
+        "sequence": "re-engage",
+        "channel": "email",
+        "template": "checking-in"
+      },
+      "cooldownHours": 168,
+      "enabled": true
+    },
+    {
+      "id": "qualified-upgrade",
+      "name": "Qualified Status Upgrade",
+      "condition": {
+        "field": "status",
+        "operator": "==",
+        "value": "qualified"
+      },
+      "action": {
+        "type": "update-status",
+        "status": "proposal"
+      },
+      "cooldownHours": 0,
+      "enabled": false
+    }
+  ],
+  "sequences": {
+    "tier-a-first-touch": {
+      "name": "Tier A First Touch",
+      "steps": [
+        {
+          "delay": 0,
+          "type": "dm",
+          "channel": "linkedin",
+          "template": "first-touch"
+        },
+        {
+          "delay": 3,
+          "type": "dm",
+          "channel": "linkedin",
+          "template": "social-proof"
+        },
+        {
+          "delay": 7,
+          "type": "email",
+          "channel": "email",
+          "template": "offer-detail"
+        }
+      ]
+    },
+    "tier-b-nurture": {
+      "name": "Tier B Nurture",
+      "steps": [
+        {
+          "delay": 0,
+          "type": "email",
+          "channel": "email",
+          "template": "intro"
+        },
+        {
+          "delay": 5,
+          "type": "email",
+          "channel": "email",
+          "template": "value-tip"
+        },
+        {
+          "delay": 14,
+          "type": "email",
+          "channel": "email",
+          "template": "case-study"
+        }
+      ]
+    },
+    "re-engage": {
+      "name": "Re-engage",
+      "steps": [
+        {
+          "delay": 0,
+          "type": "email",
+          "channel": "email",
+          "template": "checking-in"
+        }
+      ]
+    }
+  }
+}
