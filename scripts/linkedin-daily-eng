@@ -1,101 +1,16 @@
 #!/usr/bin/env node
-/**
- * Ghost Engine — LinkedIn Daily Engagement Agent
- * Day 1-14: Build real engagement like a human
- * Day 14+: Unlock DMs + outreach
- */
-const { spawn } = require('child_process');
+// linkedin-daily-eng — CLI shorthand for LinkedIn Daily Engagement
+// Usage: node scripts/linkedin-daily-eng
 
-const CONFIG = {
-  LINKEDIN_URL: "https://www.linkedin.com/in/derek-jamieson-8646a03ba/",
-  DAILY_TARGETS: {
-    likes: 15,
-    comments: 5,
-    connections: 3,
-    posts_viewed: 30
-  },
-  SEARCH_QUERIES: [
-    "TikTok creator monetization",
-    "YouTube creator revenue",
-    "content creator business",
-    "founder creator economy",
-    "influencer monetization"
-  ],
-  COMMENT_TEMPLATES: [
-    "This is exactly what most creators miss. The attention is there — it's the backend that matters.",
-    "Hard agree. Building systems beats chasing viral moments every time.",
-    "The creators who win aren't the ones with the most followers — they're the ones with the best monetization systems.",
-    "Been saying this for years. Revenue model > follower count.",
-    "This is the move. Most people don't realize how far ahead you are once you have the system in place.",
-    "Perfectly said. The gap between 'having an audience' and 'monetizing an audience' is where most people get stuck.",
-    "Real talk. And once you have the system, it compounds. More content + better monetization = exponential growth.",
-    "Exactly why I built Ghost Engine. Attention is the easy part. Revenue systems are where it counts.",
-    "The operators win in the long run. Not the creators — the ones who build the machine behind them.",
-    "This needs to be louder. Most creators are 1 viral moment away from burning out because they have no backend."
-  ],
-  LOG_FILE: "/home/workspace/Ghost-Monitization-Engine/leads/linkedin-engagement-log.json",
-  START_DATE: "2026-03-28", // Account started today
-  DM_UNLOCK_DATE: "2026-04-11" // 14 days later
-};
+const { runDailyEngagement } = require('./linkedin-daily-engagement');
 
-function log(message) {
-  const timestamp = new Date().toISOString();
-  const entry = `[${timestamp}] ${message}`;
-  console.log(entry);
-  require('fs').appendFileSync(
-    '/home/workspace/Ghost-Monitization-Engine/leads/linkedin-engagement.log',
-    entry + '\n'
-  );
-}
-
-function getDayNumber() {
-  const start = new Date(CONFIG.START_DATE);
-  const now = new Date();
-  const diff = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-  return diff + 1;
-}
-
-function isDMActive() {
-  return new Date() >= new Date(CONFIG.DM_UNLOCK_DATE);
-}
-
-async function main() {
-  const dayNumber = getDayNumber();
-  const dmActive = isDMActive();
-  
-  log(`=== LinkedIn Daily Engagement — Day ${dayNumber} ===`);
-  log(`DM Unlock: ${dmActive ? 'ACTIVE ✅' : `In ${14 - dayNumber} days`}`);
-  log(`Daily targets: ${CONFIG.DAILY_TARGETS.likes} likes, ${CONFIG.DAILY_TARGETS.comments} comments, ${CONFIG.DAILY_TARGETS.connections} connections`);
-  
-  // Save engagement session to log
-  const sessionData = {
-    date: new Date().toISOString(),
-    day: dayNumber,
-    dm_unlocked: dmActive,
-    actions: {
-      likes: 0,
-      comments: 0,
-      connections_sent: 0,
-      posts_viewed: 0
-    }
-  };
-  
-  const logPath = CONFIG.LOG_FILE.replace('.json', `-${new Date().toISOString().split('T')[0]}.json`);
-  require('fs').writeFileSync(logPath, JSON.stringify(sessionData, null, 2));
-  
-  log(`Session logged: ${logPath}`);
-  log(`Next run: tomorrow at 9 AM ET`);
-  
-  if (dmActive) {
-    log(`🎉 DAY 14+ — DMs now unlocked! Switching to outreach mode.`);
+(async () => {
+  console.log('[Zo] LinkedIn Daily Engagement — firing up...');
+  try {
+    await runDailyEngagement();
+    console.log('[Zo] Daily engagement cycle complete.');
+  } catch (err) {
+    console.error('[Zo] Engagement failed:', err.message);
+    process.exit(1);
   }
-  
-  return sessionData;
-}
-
-if (require.main === module) {
-  main().catch(console.error);
-}
-
-module.exports = { main, CONFIG };
-ENDOFFILE
+})();
