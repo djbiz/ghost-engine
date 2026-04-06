@@ -25,34 +25,11 @@
 
 ## 1. Lead Acquisition
 
-Four scripts responsible for discovering, scoring, and qualifying creator leads through Apollo.io and LinkedIn data enrichment.
+Four scripts for discovering, scoring, and qualifying creator leads through Apollo.io and LinkedIn data enrichment.
 
 ---
 
 ### apollo-search-workflow.js
 **Size:** 3732 bytes | **Category:** Lead Acquisition
 
-**Purpose:** Interactive CLI tool for Apollo.io lead search across 4 predefined creator segments (fitness creators 10-50K, business coaches 25-100K, lifestyle YouTubers 50K+, LinkedIn thought leaders 5K+). Reads Apollo API key from env, scores results, exports to CSV.
-
-| Field | Details |
-|-------|---------|
-| **Key Functions** | `searchSegment()`, `scoreResults()`, `exportToCSV()`, `runInteractiveSearch()` |
-| **Dependencies** | `axios`, `readline`, `fs`; env var `APOLLO_API_KEY` |
-| **Integration Points** | Feeds leads into `crm.js` and `linkedin-scorer.js` |
-| **Usage** | `node scripts/apollo-search-workflow.js` |
-| **Configuration** | 4 hardcoded segments with follower ranges and niche keywords |
-
----
-
-### linkedin-scorer.js
-**Size:** 5822 bytes | **Category:** Lead Acquisition
-
-**Purpose:** Weighted lead scoring engine evaluating creators across 6 factors (followers 40pts, niche 30pts, email 15pts, profile 15pts, content signals 30pts, activity recency 10pts). Raw max 140, normalized 0-100. Tiers: Hot 80+, Warm 60-79, Cold 40-59, Dead below 40.
-
-| Field | Details |
-|-------|---------|
-| **Key Functions** | `calculateScore()`, `getScoreTier()`, `applyPlatformModifiers()`, `calculateLinkedInModifiers()` |
-| **Dependencies** | None (pure logic module) |
-| **Integration Points** | Used by `outreach-engine.js`, `crm.js`, `pipeline-automation.js` |
-| **Usage** | `require('./linkedin-scorer')` then call `calculateScore(leadData)` |
-| **Configuration** | 
+**Purpose:** Interactive CLI for Apollo.io lead search across 4 creator segments (fitness 10-50K, coaches 25-100K, lifestyle YouTubers 50K+, LinkedIn leaders 5K+). Reads API key from env, scores by engagement and niche relevance
