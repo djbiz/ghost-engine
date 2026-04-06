@@ -35,7 +35,7 @@ Four scripts for discovering, scoring, and qualifying creator leads through Apol
 **Purpose:** Interactive CLI for Apollo.io lead search across 4 creator segments (fitness 10-50K, coaches 25-100K, lifestyle YouTubers 50K+, LinkedIn leaders 5K+). Reads API key from env, scores by engagement and niche relevance, exports qualified leads to CSV with enriched contact data.
 
 | Field | Details |
-|-------|----------|
+|-------|---------|
 | **Key Functions** | `searchSegment()`, `scoreResults()`, `exportToCSV()`, `runInteractiveSearch()` |
 | **Dependencies** | axios, readline, fs; env APOLLO_API_KEY |
 | **Integration Points** | Feeds crm.js and linkedin-scorer.js |
@@ -48,7 +48,7 @@ Four scripts for discovering, scoring, and qualifying creator leads through Apol
 **Purpose:** Weighted scoring engine evaluating creators on 6 factors (followers 40pts, niche 30pts, email 15pts, profile 15pts, content 30pts, recency 10pts). Max 140 normalized to 0-100. Tiers: Hot 80+, Warm 60-79, Cold 40-59, Dead <40. Platform modifiers for IG/YT/TT/LI.
 
 | Field | Details |
-|-------|----------|
+|-------|---------|
 | **Key Functions** | `calculateScore()`, `getScoreTier()`, `applyPlatformModifiers()`, `calculateLinkedInModifiers()` |
 | **Dependencies** | None (pure logic module) |
 | **Integration Points** | Used by outreach-engine.js, crm.js, pipeline-automation.js |
@@ -61,7 +61,7 @@ Four scripts for discovering, scoring, and qualifying creator leads through Apol
 **Purpose:** Multi-platform scraping engine discovering creator profiles from IG, YT, TikTok, LinkedIn via APIs and web scraping fallbacks. Rate limiting (2/s IG, 5/s YT), proxy rotation, dedup by email hash. Outputs structured lead objects with platform metrics.
 
 | Field | Details |
-|-------|----------|
+|-------|---------|
 | **Key Functions** | `scrapeInstagram()`, `scrapeYouTube()`, `scrapeTikTok()`, `scrapeLinkedIn()`, `deduplicateLeads()` |
 | **Dependencies** | axios, cheerio, puppeteer; env PROXY_LIST, SCRAPER_API_KEY |
 | **Integration Points** | Feeds linkedin-scorer.js; stored via crm.js |
@@ -74,7 +74,7 @@ Four scripts for discovering, scoring, and qualifying creator leads through Apol
 **Purpose:** Niche discovery tool analyzing trending topics to identify high-opportunity creator niches. Scores by competition density, monetization potential, audience growth rate. Generates weekly reports with recommended outreach segments.
 
 | Field | Details |
-|-------|----------|
+|-------|---------|
 | **Key Functions** | `analyzeTrends()`, `scoreNiche()`, `generateNicheReport()`, `getTopNiches()` |
 | **Dependencies** | axios, fs; env TRENDS_API_KEY |
 | **Integration Points** | Outputs feed apollo-search-workflow.js segments |
@@ -83,11 +83,4 @@ Four scripts for discovering, scoring, and qualifying creator leads through Apol
 
 ## 2. Outreach & DM
 
-Four scripts managing multi-channel outreach with templates, follow-ups, and reply classification.
-
----
-
-### outreach-engine.js
-**Size:** 6150 bytes | **Category:** Outreach & DM
-
-**Purpose:** Core outreach automation for multi-channel cam
+Four scripts managing multi-channel outreach with templates, fo
