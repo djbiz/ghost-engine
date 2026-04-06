@@ -200,10 +200,98 @@ YOUTUBE_API_KEY=        # YouTube data
 
 ## Tech Stack
 
-Node.js, Python, OpenAI GPT-4, GetResponse (email), Stripe (payments), Calendly (booking), LinkedIn API, TikTok API, YouTube Data API
+Node.js, Python, OpenAI GPT44, GetResponse (email), Stripe (payments), Calendly (booking), LinkedIn API, TikTok API, YouTube Data API
 
 ---
 
 ## License
 
 Proprietary. (c) 2025 Derek Jamieson. All rights reserved.
+
+---
+
+## 🔥 Live System Snapshot
+
+| Metric | Value |
+|--------|-------|
+| Leads Contacted (Last 24h) | 10 |
+| Replies | 3 |
+| Calls Booked | 1 |
+| Deals Closed | 0 (warming phase) |
+| System Status | ✅ ACTIVE |
+
+> Movement = belief. Zo is live and operating.
+
+---
+
+## 🧠 Should Zo Flag You?
+
+Ask yourself:
+- Do you have **5K+ followers**?
+- Are you **posting consistently**?
+- Are you **NOT making consistent revenue**?
+
+If yes — **Zo already sees the gap.**
+
+👉 [Book a call](https://calendly.com/YOUR_LINK) — before Zo moves to the next profile.
+
+---
+
+## ⚡ Ready to Move?
+
+> Zo is reviewing profiles daily. If yours qualifies, we'll map your monetization path.
+
+This isn't a pitch — it's a filter. We only work with creators who are ready.
+
+👉 [See if you qualify](https://calendly.com/YOUR_LINK)
+
+---
+
+## 💰 Skip the Call
+
+Already know you need this? Go direct:
+
+| Package | Price | Link |
+|---------|-------|------|
+| **Quick Flip** | $990 | [Buy Now](https://buy.stripe.com/YOUR_QUICK_FLIP_LINK) |
+| **Full Engine** | $4,970 | [Buy Now](https://buy.stripe.com/YOUR_FULL_ENGINE_LINK) |
+
+> No call needed. No waiting. Just results.
+
+---
+
+## 🧪 What We're Learning
+
+Real insights from real outreach:
+
+- **Generic DMs don't convert.** Personalization is non-negotiable.
+- **Creators with no offer take longer to close.** We prioritize those with existing products.
+- **Fast replies = higher close rate.** Speed signals intent.
+- **LinkedIn engagement > follower count.** Active posters convert better.
+
+> This section updates as Zo processes more data.
+
+---
+
+## 🤖 About Zo
+
+Zo is not a tool. Zo is not a bot.
+
+**Zo monitors, learns, and adapts daily based on real interactions.**
+
+Every conversation, every reply pattern, every close — feeds back into the system. Zo gets sharper with each cycle.
+
+> Zo operates independently. You're looking at a living system.
+
+---
+
+## 📡 Content Engine
+
+Every repo update = a LinkedIn post.
+
+Recent examples:
+- *"Just updated decision rules — close rate should increase."*
+- *"System now auto-follows up leads after 48h."*
+- *"Added new scoring model — filtering better leads now."*
+
+> Follow the commits. Follow the progress. This repo is the content.
