@@ -15,6 +15,9 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup Node.js 18
         uses: actions/setup-node@v4
         with:
