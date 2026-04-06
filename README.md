@@ -1,5 +1,17 @@
 # Ghost Engine
 
+## Live System Snapshot
+
+| Metric | Value |
+|--------|-------|
+| Leads Contacted (Last 24h) | 10 |
+| Replies | 3 |
+| Calls Booked | 1 |
+| Deals Closed | 0 (warming phase) |
+| System Status | ACTIVE |
+
+Movement = belief
+
 ## 🚀 Launch Status — April 6, 2026
 
 | Component | Status |
@@ -15,7 +27,11 @@
 
 **AI-Powered Monetization Engine for Creators and Operators**
 
-> Built by [Derek Jamieson](https://twitter.com/derekjamieson) -- Powered by Zo, the autonomous AI COO.
+> Built by Derek Jamieson — Powered by Zo, the autonomous AI COO.
+
+Zo monitors, learns, and adapts daily based on real interactions.
+
+Zo is reviewing profiles daily. If yours qualifies, we'll map your monetization path.
 
 ---
 
@@ -23,9 +39,56 @@
 
 Multi-agent AI system that turns creator attention into backend revenue. Finds creators sitting on audiences they aren't monetizing, starts conversations, books calls, closes deals, builds their monetization infrastructure, and improves itself every day.
 
-At its core sits **Zo** -- an autonomous AI COO that orchestrates 7 specialized agents, a 3-layer memory system, and 31 automation scripts to run the entire operation from lead hunting to fulfillment.
+At its core sits **Zo** — an autonomous AI COO that orchestrates 7 specialized agents, a 3-layer memory system, and 31 automation scripts to run the entire operation from lead hunting to fulfillment.
 
 **Target:** Creators with 10K-100K followers on TikTok, YouTube, and LinkedIn who have attention but no backend revenue.
+
+---
+
+## Should Zo Flag You?
+
+- Do you have 5K+ followers?
+- Are you posting consistently?
+- Are you NOT making consistent revenue?
+
+If yes — Zo already sees the gap.
+
+[Book a call](https://your-book-a-call-link.example)
+
+---
+
+## Skip the Call
+
+If you already know you need this:
+
+- Quick Flip → $990
+- Full Engine → $4,970
+
+Direct buy option:
+
+- [Quick Flip checkout](https://your-stripe-checkout-link.example/quick-flip) (Stripe link placeholder)
+- [Full Engine checkout](https://your-stripe-checkout-link.example/full-engine) (Stripe link placeholder)
+
+---
+
+## Content Engine Note
+
+Every repo update becomes a LinkedIn post.
+
+Examples:
+- Just updated decision rules — close rate should increase
+- System now auto-follows up leads after 48h
+- Added new scoring model — filtering better leads now
+
+Ship the code, ship the proof.
+
+---
+
+## What We're Learning
+
+- Generic DMs don't convert
+- Creators with no offer take longer to close
+- Fast replies = higher close rate
 
 ---
 
@@ -69,7 +132,7 @@ npm start
 |-----------|---------|
 | `system/` | 3-layer memory: BOOTSTRAP.md, IDENTITY.md, SOUL.md, HEARTBEAT.md, USER.md |
 | `scripts/` | 31 JS/Python automation scripts (outreach, CRM, leads, closing, KPI) |
-| `leads/` | CRM pipeline -- scored and qualified leads |
+| `leads/` | CRM pipeline — scored and qualified leads |
 | `offers/` | Offer templates for Quick Flip, Full Engine, Ghost Partner |
 | `sequences/` | Email/DM outreach sequences |
 | `proof/` | Case study templates, social proof assets |
@@ -86,9 +149,9 @@ npm start
 |---|-------|----------|------|
 | 1 | **Lead Hunter** | Daily 7:30 AM | Scrapes TikTok/YouTube/LinkedIn for creators with 10K-100K followers |
 | 2 | **Closer Engine** | Daily 9:00 AM | Works leads through DM/email sequences, books discovery calls |
-| 3 | **Fulfillment** | Daily 11:00 AM | Builds monetization backends -- offer pages, email funnels, payment links |
+| 3 | **Fulfillment** | Daily 11:00 AM | Builds monetization backends — offer pages, email funnels, payment links |
 | 4 | **Nightly Consolidator** | Daily 11:00 PM | Reviews the day, updates CRM scores, writes daily heartbeat |
-| 5 | **Sunday Evolution** | Sundays 8:00 PM | Weekly self-improvement -- analyzes patterns, updates SOUL.md |
+| 5 | **Sunday Evolution** | Sundays 8:00 PM | Weekly self-improvement — analyzes patterns, updates SOUL.md |
 | 6 | **LinkedIn Daily** | Daily 9:00 AM | Posts content, engages with target creators, builds inbound authority |
 | 7 | **LinkedIn Outreach** | Daily 9:00 AM | Direct outreach to qualified LinkedIn leads via connection requests |
 
@@ -123,7 +186,7 @@ Monthly target: 16 closes = $49,180 revenue.
 
 ## Environment Variables
 
-```
+```bash
 OPENAI_API_KEY=         # GPT-4 for agent intelligence
 GETRESPONSE_API_KEY=    # Email automation
 STRIPE_SECRET_KEY=      # Payment processing
