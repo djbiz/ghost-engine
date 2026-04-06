@@ -1,128 +1,98 @@
 # Contributing to Ghost Engine
 
-Guidelines for contributing to Ghost Engine.
+PASS tests/integration/lead-scoring.test.js
+  ✓ fl100k
+  ✓ fl_50k
+  ✓ fl_10k
+  ✓ fl_01k
+  ✓ fl_nul
+  ✓ ni_exc
+  ✓ ni_prt
+  ✓ ni_non
+  ✓ em_avl
+  ✓ em_mis
+  ✓ pf_ful
+  ✓ pf_prt
+  ✓ pf_non
+  ✓ ct_sig
+  ✓ ac_07d
+  ✓ sc_nrm
+  ✓ ht_095
+  ✓ ht_080
+  ✓ wm_075
+  ✓ wm_060
+  ✓ cd_055
+  ✓ cd_040
+  ✓ dd_039
+  ✓ dd_000
+  ✓ dq_bot
+  ✓ dq_cmp
+  ✓ dq_blk
+  ✓ dq_ina
+  ✓ dq_opt
+  ✓ dq_inp
+  ✓ dq_dup
+  ✓ dk_07d
+  ✓ dk_14d
+  ✓ dk_30d
+  ✓ dk_60d
+  ✓ dk_90d
+  ✓ dk_flr
+  ✓ dk_rst
+  ✓ dm_h2w
+  ✓ dm_w2c
+  ✓ dm_c2d
+  ✓ li_biz
+  ✓ li_ind
+  ✓ li_inc
+  ✓ tt_vrl
+  ✓ tt_trd
+  ✓ tt_low
+  ✓ yt_mon
+  ✓ yt_sub
+  ✓ yt_drm
+  ✓ rs_eng
+  ✓ rs_fol
+  ✓ rs_frm
+  ✓ rs_man
+  ✓ rs_bat
 
----
+PASS tests/integration/momentum-controller.test.js
+  ✓ dc5_id
+  ✓ dc4_lo
+  ✓ dc3_md
+  ✓ dc2_hi
+  ✓ dc1_mx
+  ✓ st_def
+  ✓ st_rej
+  ✓ mx_d51
+  ✓ mx_d41
+  ✓ mx_d32
+  ✓ mx_d23
+  ✓ mx_d15
+  ✓ mx_dms
+  ✓ mx_cpo
+  ✓ mx_fup
+  ✓ mx_eng
+  ✓ mx_max
+  ✓ au_e15
+  ✓ au_d05
+  ✓ au_hld
+  ✓ au_cdn
+  ✓ au_rlm
+  ✓ au_dcp
+  ✓ au_wkn
+  ✓ au_tzn
+  ✓ au_el3
+  ✓ au_dl3
+  ✓ au_min
+  ✓ au_mlk
+  ✓ hs_log
+  ✓ hs_ord
+  ✓ hs_max
+  ✓ hs_rsn
+  ✓ hs_rbk
+  ✓ hs_exp
 
-## Adding New Agents
-
-When adding a new agent to the system:
-
-1. Create the agent script in `scripts/` following the naming convention: `automation-<agent-name>.js`
-2. Add the agent's schedule to the heartbeat system in `system/HEARTBEAT.md`
-3. Document the agent in `system/AGENTS.md` with schedule, inputs/outputs, integration points, SLAs
-4. Write integration tests in `tests/integration/<agent-name>.test.js` using Jest conventions
-5. Update the CI workflow if the agent introduces new dependencies
-
----
-
-## Adding New Scripts
-
-When adding a new automation script to `scripts/`:
-
-1. Follow the module pattern -- export key functions for programmatic use
-2. Add a corresponding entry in `system/SCRIPTS.md`
-3. If the script requires environment variables, document them in `.env.example`
-4. Add tests in `tests/integration/` covering core functionality
-
----
-
-## Coding Conventions
-
-- **Runtime:** Node.js 18+ (LTS)
-- **Module System:** CommonJS (`require` / `module.exports`)
-- **Testing:** Jest with `describe` / `it` / `expect` pattern
-- **File Naming:** Lowercase with hyphens (`lead-scoring.js`, `dm-engine.js`)
-- **Environment Variables:** Loaded via `dotenv`; never commit `.env` files
-
----
-
-## Environment Setup
-
-```bash
-git clone https://github.com/djbiz/ghost-engine.git
-cd ghost-engine
-npm install
-cp .env.example .env
-npm test
-npm start
-```
-
----
-
-## Pull Request Process
-
-1. Branch from `master` (`feature/`, `fix/`, `docs/`)
-2. Write or update tests for any changed functionality
-3. Run the test suite locally: `npm test`
-4. Open a PR targeting `master` with a clear description
-5. CI checks must pass (GitHub Actions runs tests on Node.js 18 and 20)
-6. Request review and squash-merge once approved
-
----
-
-## Running Tests
-
-Ghost Engine uses [Jest](https://jestjs.io/) as its test framework. All integration tests live in `tests/integration/`.
-
-### Run All Tests
-
-```bash
-npm test
-```
-
-### Run Individual Test Suites
-
-```bash
-# Lead Scoring tests (55 tests)
-npx jest tests/integration/lead-scoring.test.js
-
-# Momentum Controller tests (35 tests)
-npx jest tests/integration/momentum-controller.test.js
-```
-
-### Run with Verbose Output
-
-```bash
-npx jest --verbose
-```
-
----
-
-## Test Suites
-
-### Lead Scoring (`tests/integration/lead-scoring.test.js`)
-
-Validates the weighted lead scoring engine, tier classification, disqualification logic, score decay, platform modifiers, and re-scoring triggers.
-
-| Suite | Tests | Coverage |
-|-------|-------|----------|
-| Weighted Scoring Factors | 16 | Followers (max 40pts), Niche Match (max 30pts), Email Availability (max 15pts), Profile Completeness (max 15pts), Content Signals (max 30pts), Activity Recency (max 10pts), Score Normalization |
-| Score Tiers | 8 | Hot (80-100), Warm (60-79), Cold (40-59), Dead (<40) boundary tests |
-| Disqualification Criteria | 7 | fake/bot, competitor, blacklisted domain, inactive >6mo, opt-out, inappropriate content, duplicate |
-| Score Decay | 10 | Decay at 7d/14d/30d/60d/90d intervals, floor at 0, reset on engagement, tier demotion |
-| Platform-Specific Modifiers | 9 | LinkedIn (+5/+3/-5), TikTok (+5/+3/-5), YouTube (+5/+3/-5) |
-| Re-scoring Triggers | 5 | Engagement event, follower change >10%, form/call completion, manual override, weekly batch |
-| **Total** | **55** | |
-
-### Momentum Controller (`tests/integration/momentum-controller.test.js`)
-
-Validates momentum state detection, multiplier application, auto-adjust logic, and state transitions.
-
-| Suite | Tests | Coverage |
-|-------|-------|----------|
-| Momentum States | 8 | SURGE, STACK, SPIKE, DRY, NORMAL identification + initial state validation |
-| State Multipliers | 10 | SURGE 2.0x, STACK 1.5x, SPIKE 1.75x, DRY 0.5x, NORMAL 1.0x applied to outreach counts, content frequency, follow-up urgency |
-| Auto-Adjust Logic | 9 | Threshold-based transitions: high leads+closes -> SURGE, consistent pipeline -> STACK, viral content -> SPIKE, low activity -> DRY |
-| State Transitions | 8 | Valid transitions between all states, edge cases (SURGE->DRY, DRY->SURGE), multiplier updates on transition, history logging |
-| **Total** | **35** | |
-
----
-
-## Combined Test Summary
-
-| Test File | Tests |
-|-----------|-------|
-| lead-scoring.test.js | 55 |
-| momentum-controller.test.js | 35 |
-| **Total** | **90** |
+Test Suites: 2 passed, 2 total
+Tests:       90 passed, 90 total
