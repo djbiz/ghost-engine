@@ -5,5 +5,9 @@ module.exports = {
   ...require('./dedupe'),
   ...require('./observability'),
   ...require('./activities'),
+  ...require('./heartbeat-activities'),
+  ...require('./campaign-workflow'),
+  ...require('./heartbeat-workflows'),
+  ...require('./workflows'),
   ...require('./worker'),
 };

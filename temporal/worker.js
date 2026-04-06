@@ -1,6 +1,7 @@
 const { NativeConnection, Worker } = require('@temporalio/worker');
-const { getTemporalConfig } = require('./config');
+const { getTemporalConfig, getTemporalConnectionOptions } = require('./config');
 const { createCampaignActivities } = require('./activities');
+const { createHeartbeatActivities } = require('./heartbeat-activities');
 const { createObservability } = require('./observability');
 
 async function createCampaignWorker(overrides = {}) {
@@ -9,19 +10,25 @@ async function createCampaignWorker(overrides = {}) {
     namespace: config.namespace,
     taskQueue: config.taskQueue,
   });
-  const connection = overrides.connection || await NativeConnection.connect({
-    address: config.address,
-  });
+  const connection = overrides.connection || await NativeConnection.connect(
+    overrides.connectionOptions || getTemporalConnectionOptions(config),
+  );
 
   const worker = await Worker.create({
     connection,
     namespace: config.namespace,
     taskQueue: config.taskQueue,
-    workflowsPath: require.resolve('./campaign-workflow'),
-    activities: overrides.activities || createCampaignActivities({
-      config,
-      observability,
-    }),
+    workflowsPath: require.resolve('./workflows'),
+    activities: overrides.activities || {
+      ...createCampaignActivities({
+        config,
+        observability,
+      }),
+      ...createHeartbeatActivities({
+        config,
+        observability,
+      }),
+    },
     logger: observability.logger,
   });
 
@@ -34,6 +41,7 @@ async function runCampaignWorker(overrides = {}) {
     address: config.address,
     namespace: config.namespace,
     taskQueue: config.taskQueue,
+    profile: config.profile,
   });
 
   try {

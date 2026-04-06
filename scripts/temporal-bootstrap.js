@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const temporalClient = require('@temporalio/client');
-const { getTemporalConfig } = require('../temporal/config');
+const { getTemporalConfig, getTemporalConnectionOptions } = require('../temporal/config');
 const { createObservability } = require('../temporal/observability');
 
 async function ensureNamespace(connection, namespace, logger) {
@@ -18,7 +18,7 @@ async function ensureNamespace(connection, namespace, logger) {
     logger.info('temporal.namespace.exists', { namespace });
     return { created: false, exists: true };
   } catch (error) {
-    if (typeof service.registerNamespace === 'function') {
+    if (typeof service.registerNamespace === 'function' && process.env.TEMPORAL_PROFILE !== 'cloud') {
       await service.registerNamespace({
         namespace,
         description: 'Ghost Engine campaign orchestration namespace',
@@ -27,7 +27,12 @@ async function ensureNamespace(connection, namespace, logger) {
       logger.info('temporal.namespace.created', { namespace });
       return { created: true };
     }
-    throw error;
+    logger.warn('temporal.namespace.skip', {
+      reason: 'cloud-managed-or-unavailable',
+      namespace,
+      error: error?.message,
+    });
+    return { created: false, skipped: true };
   }
 }
 
@@ -42,6 +47,7 @@ async function main() {
     address: config.address,
     namespace: config.namespace,
     taskQueue: config.taskQueue,
+    profile: config.profile,
   });
 
   const Connection = temporalClient.Connection || temporalClient.NativeConnection;
@@ -49,7 +55,7 @@ async function main() {
     throw new Error('Temporal client connection factory is unavailable in the installed SDK');
   }
 
-  const connection = await Connection.connect({ address: config.address });
+  const connection = await Connection.connect(getTemporalConnectionOptions(config));
 
   await ensureNamespace(connection, config.namespace, observability.logger);
 
@@ -57,6 +63,7 @@ async function main() {
     address: config.address,
     namespace: config.namespace,
     taskQueue: config.taskQueue,
+    profile: config.profile,
   });
 
   await connection.close();
