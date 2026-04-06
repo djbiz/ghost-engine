@@ -1,0 +1,114 @@
+[
+  {
+    "id": "rule_score_hot",
+    "name": "Hot Lead Score Alert",
+    "condition": {
+      "field": "score",
+      "operator": "gt",
+      "value": 75
+    },
+    "action": {
+      "type": "email",
+      "template": "hot_lead_alert",
+      "priority": "high"
+    },
+    "enabled": true,
+    "createdAt": "2026-04-05T11:45:27.379Z"
+  },
+  {
+    "id": "rule_engagement_high",
+    "name": "High Engagement Trigger",
+    "condition": {
+      "field": "engagement_rate",
+      "operator": "gt",
+      "value": 5
+    },
+    "action": {
+      "type": "email",
+      "template": "high_engagement",
+      "priority": "high"
+    },
+    "enabled": true,
+    "createdAt": "2026-04-05T11:45:27.380Z"
+  },
+  {
+    "id": "rule_reengage_7days",
+    "name": "7-Day Re-engagement",
+    "condition": {
+      "field": "days_since_contact",
+      "operator": "gt",
+      "value": 7
+    },
+    "action": {
+      "type": "dm",
+      "template": "reengage",
+      "priority": "medium"
+    },
+    "enabled": true,
+    "createdAt": "2026-04-05T11:45:27.380Z"
+  },
+  {
+    "id": "rule_influencer",
+    "name": "Influencer Trigger (100K+)",
+    "condition": {
+      "field": "followers",
+      "operator": "gte",
+      "value": 100000
+    },
+    "action": {
+      "type": "email",
+      "template": "influencer_outreach",
+      "priority": "high"
+    },
+    "enabled": true,
+    "createdAt": "2026-04-05T11:45:27.380Z"
+  },
+  {
+    "id": "rule_qualified_nurture",
+    "name": "Qualified Lead Nurture",
+    "condition": {
+      "field": "status",
+      "operator": "eq",
+      "value": "qualified"
+    },
+    "action": {
+      "type": "sequence",
+      "template": "nurture_14day",
+      "priority": "medium"
+    },
+    "enabled": true,
+    "createdAt": "2026-04-05T11:45:27.380Z"
+  },
+  {
+    "id": "rule_tiktok_creator",
+    "name": "TikTok Creator Quick Flip",
+    "condition": {
+      "field": "platform",
+      "operator": "eq",
+      "value": "tiktok"
+    },
+    "action": {
+      "type": "dm",
+      "template": "tiktok_quick_flip",
+      "priority": "medium"
+    },
+    "enabled": true,
+    "createdAt": "2026-04-05T11:45:27.380Z"
+  },
+  {
+    "id": "rule_youtube_monetization",
+    "name": "YouTube Monetization Gap",
+    "condition": {
+      "field": "platform",
+      "operator": "eq",
+      "value": "youtube"
+    },
+    "action": {
+      "type": "email",
+      "template": "youtube_monetization",
+      "priority": "medium"
+    },
+    "enabled": true,
+    "createdAt": "2026-04-05T11:45:27.380Z"
+  }
+]
