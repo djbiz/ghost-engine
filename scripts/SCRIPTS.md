@@ -58,4 +58,36 @@ Four scripts for discovering, scoring, and qualifying creator leads through Apol
 ### lead-scraper.js
 **Size:** 4250 bytes | **Category:** Lead Acquisition
 
-**Purpose:** Multi-platform scraping engine discovering creator profiles from IG, YT, TikTok, LinkedIn via APIs and web scraping fallbacks. Rate limiting (2/s IG, 5/s YT), proxy rotation,
+**Purpose:** Multi-platform scraping engine discovering creator profiles from IG, YT, TikTok, LinkedIn via APIs and web scraping fallbacks. Rate limiting (2/s IG, 5/s YT), proxy rotation, dedup by email hash. Outputs structured lead objects with platform metrics.
+
+| Field | Details |
+|-------|----------|
+| **Key Functions** | `scrapeInstagram()`, `scrapeYouTube()`, `scrapeTikTok()`, `scrapeLinkedIn()`, `deduplicateLeads()` |
+| **Dependencies** | axios, cheerio, puppeteer; env PROXY_LIST, SCRAPER_API_KEY |
+| **Integration Points** | Feeds linkedin-scorer.js; stored via crm.js |
+
+---
+
+### niche-finder.js
+**Size:** 2910 bytes | **Category:** Lead Acquisition
+
+**Purpose:** Niche discovery tool analyzing trending topics to identify high-opportunity creator niches. Scores by competition density, monetization potential, audience growth rate. Generates weekly reports with recommended outreach segments.
+
+| Field | Details |
+|-------|----------|
+| **Key Functions** | `analyzeTrends()`, `scoreNiche()`, `generateNicheReport()`, `getTopNiches()` |
+| **Dependencies** | axios, fs; env TRENDS_API_KEY |
+| **Integration Points** | Outputs feed apollo-search-workflow.js segments |
+
+---
+
+## 2. Outreach & DM
+
+Four scripts managing multi-channel outreach with templates, follow-ups, and reply classification.
+
+---
+
+### outreach-engine.js
+**Size:** 6150 bytes | **Category:** Outreach & DM
+
+**Purpose:** Core outreach automation for multi-channel cam
