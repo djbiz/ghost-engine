@@ -1,17 +1,91 @@
 # Contributing to Ghost Engine
 
-Thank you for your interest in contributing to Ghost Engine. This guide covers test coverage, development workflows, and conventions to help you get started.
+Guidelines for contributing to Ghost Engine.
 
 ---
 
-## Test Coverage
+## Adding New Agents
 
-All integration tests pass. The project maintains **146 total integration tests** spanning two core modules:
+When adding a new agent to the system:
 
-- **Lead Scoring** — 90 tests (`tests/integration/lead-scoring.test.js`)
-- **Momentum Controller** — 56 tests (`tests/integration/momentum-controller.test.js`)
+1. Create the agent script in `scripts/` following the naming convention: `automation-<agent-name>.js`
+2. Add the agent's schedule to the heartbeat system in `system/HEARTBEAT.md`
+3. Document the agent in `system/AGENTS.md` with schedule, inputs/outputs, integration points, SLAs
+4. Write integration tests in `tests/integration/<agent-name>.test.js` using Jest conventions
+5. Update the CI workflow if the agent introduces new dependencies
 
-Every pull request must pass the full suite before merge.
+---
+
+## Adding New Scripts
+
+When adding a new automation script to `scripts/`:
+
+1. Follow the module pattern -- export key functions for programmatic use
+2. Add a corresponding entry in `system/SCRIPTS.md`
+3. If the script requires environment variables, document them in `.env.example`
+4. Add tests in `tests/integration/` covering core functionality
+
+---
+
+## Coding Conventions
+
+- **Runtime:** Node.js 18+ (LTS)
+- **Module System:** CommonJS (`require` / `module.exports`)
+- **Testing:** Jest with `describe` / `it` / `expect` pattern
+- **File Naming:** Lowercase with hyphens (`lead-scoring.js`, `dm-engine.js`)
+- **Environment Variables:** Loaded via `dotenv`; never commit `.env` files
+
+---
+
+## Environment Setup
+
+```bash
+git clone https://github.com/djbiz/ghost-engine.git
+cd ghost-engine
+npm install
+cp .env.example .env
+npm test
+npm start
+```
+
+---
+
+## Pull Request Process
+
+1. Branch from `master` (`feature/`, `fix/`, `docs/`)
+2. Write or update tests for any changed functionality
+3. Run the test suite locally: `npm test`
+4. Open a PR targeting `master` with a clear description
+5. CI checks must pass (GitHub Actions runs tests on Node.js 18 and 20)
+6. Request review and squash-merge once approved
+
+---
+
+## Running Tests
+
+Ghost Engine uses [Jest](https://jestjs.io/) as its test framework. All integration tests live in `tests/integration/`.
+
+### Run All Tests
+
+```bash
+npm test
+```
+
+### Run Individual Test Suites
+
+```bash
+# Lead Scoring tests (56 tests across 6 suites)
+npx jest tests/integration/lead-scoring.test.js
+
+# Momentum Controller tests (35 tests across 4 suites)
+npx jest tests/integration/momentum-controller.test.js
+```
+
+### Run with Verbose Output
+
+```bash
+npx jest --verbose
+```
 
 ---
 
@@ -19,148 +93,173 @@ Every pull request must pass the full suite before merge.
 
 ### Lead Scoring (`tests/integration/lead-scoring.test.js`)
 
-90 tests across 14 suites covering weighted scoring, tier classification, disqualification, decay, platform modifiers, re-scoring triggers, and edge cases.
+Validates the weighted lead scoring engine, tier classification, disqualification logic, score decay, platform modifiers, and re-scoring triggers.
 
-| # | Suite | Tests | Description |
-|---|-------|------:|-------------|
-| 1 | Weighted Scoring Factors | 16 | Validates individual scoring weights for follower count, engagement rate, post frequency, bio quality, and other profile signals. |
-| 2 | Score Tiers | 8 | Ensures leads are classified into the correct tier (cold, warm, hot, ultra) based on computed score ranges. |
-| 3 | Disqualification Criteria | 7 | Verifies that leads meeting disqualification thresholds (spam indicators, bot patterns, blacklisted domains) are correctly flagged. |
-| 4 | Score Decay | 9 | Tests time-based score degradation logic, including decay rates, minimum floor values, and decay suspension rules. |
-| 5 | Platform-Specific Modifiers | 9 | Confirms platform-aware scoring adjustments for Twitter, LinkedIn, Instagram, TikTok, and other supported platforms. |
-| 6 | Re-scoring Triggers | 7 | Validates that profile updates, engagement spikes, and manual overrides correctly trigger a lead re-score. |
-| 7 | Follower Boundary Edge Cases | 7 | Tests boundary conditions around follower count thresholds (zero followers, exactly-on-boundary values, extremely large counts). |
-| 8 | Profile Element Scoring | 6 | Covers scoring of individual profile elements such as avatar presence, bio length, link validity, and verification status. |
-| 9 | Content Signal Granularity | 3 | Validates fine-grained content signal extraction including hashtag relevance, mention patterns, and post sentiment. |
-| 10 | Activity Recency Boundaries | 6 | Tests edge cases around activity timestamps — stale profiles, just-expired windows, and exactly-on-boundary recency. |
-| 11 | Score Clamping | 3 | Ensures computed scores are clamped within valid bounds (0–100) regardless of extreme input combinations. |
-| 12 | DQ Edge Cases | 3 | Covers disqualification edge cases such as partial matches, simultaneous DQ triggers, and DQ reversal scenarios. |
-| 13 | Decay Edge Cases | 4 | Tests decay behavior under edge conditions including zero elapsed time, maximum decay, and negative time deltas. |
-| 14 | Batch Re-score | 2 | Validates batch re-scoring operations for correctness, ordering, and idempotency across multiple leads. |
-| | **Total** | **90** | |
+| Suite | Tests | Coverage |
+|-------|-------|----------|
+| Weighted Scoring Factors | 16 | Followers (max 40pts), Niche Match (max 30pts), Email Availability (max 15pts), Profile Completeness (max 15pts), Content Signals (max 30pts), Activity Recency (max 10pts), Score Normalization (140 raw to 0-100 scale) |
+| Score Tiers | 8 | Hot (80-100), Warm (60-79), Cold (40-59), Dead (<40) boundary classification |
+| Disqualification Criteria | 7 | fake/bot, competitor, blacklisted domain, inactive >6 months, previous opt-out, inappropriate content, duplicate lead |
+| Score Decay | 9 | Decay at 7d (-2), 14d (-5), 30d (-10), 60d (-20), 90d (-30); floor at 0; reset on engagement; tier demotion on threshold breach |
+| Platform-Specific Modifiers | 9 | LinkedIn bonuses/penalties (+5/+3/-5), TikTok bonuses/penalties (+5/+3/-5), YouTube bonuses/penalties (+5/+3/-5) |
+| Re-scoring Triggers | 7 | New engagement, follower change >10%, form/call completion, manual override, weekly batch, platform migration, data correction |
 
 ### Momentum Controller (`tests/integration/momentum-controller.test.js`)
 
-56 tests across 10 suites covering momentum state management, multipliers, auto-adjust logic, transitions, and edge cases.
+Validates momentum state management, multiplier application, auto-adjust logic, and state transitions.
 
-| # | Suite | Tests | Description |
-|---|-------|------:|-------------|
-| 1 | Momentum States | 7 | Validates all supported momentum states (idle, building, peaked, cooling, stalled, surging, declining) and their properties. |
-| 2 | State Multipliers | 9 | Tests that each momentum state applies the correct output multiplier to downstream scoring and action thresholds. |
-| 3 | Auto-Adjust Logic | 7 | Verifies the controller's automatic adjustment of momentum based on engagement velocity, trend signals, and configured sensitivity. |
-| 4 | State Transitions | 12 | Covers valid and invalid state transitions, ensuring the state machine enforces allowed transition paths and rejects illegal jumps. |
-| 5 | Rapid State Cycling | 3 | Tests system stability when momentum states change in rapid succession, guarding against oscillation and race conditions. |
-| 6 | Boundary Thresholds | 4 | Validates behavior at exact threshold boundaries between momentum states, including off-by-one and floating-point precision. |
-| 7 | Zero-Value Multipliers | 3 | Ensures correct handling when multipliers resolve to zero, preventing division errors and silent data loss downstream. |
-| 8 | Invalid State Handling | 3 | Tests graceful handling of unrecognized or corrupted state values, including null, undefined, and malformed strings. |
-| 9 | getActiveMultiplier Consistency | 4 | Verifies that `getActiveMultiplier()` returns consistent results across repeated calls, state snapshots, and concurrent access. |
-| 10 | History Management | 4 | Covers momentum history recording, retrieval, truncation, and cleanup of stale history entries. |
-| | **Total** | **56** | |
+| Suite | Tests | Coverage |
+|-------|-------|----------|
+| Momentum States | 7 | All 5 states (SURGE, STACK, SPIKE, DRY, NORMAL) + initial state validation + unknown state rejection |
+| State Multipliers | 9 | SURGE 2.0x, STACK 1.5x, SPIKE 1.75x, DRY 0.5x, NORMAL 1.0x applied to outreach counts, content frequency, follow-up urgency |
+| Auto-Adjust Logic | 7 | Threshold-based transitions: high leads+closes -> SURGE, consistent pipeline -> STACK, viral content -> SPIKE, low activity -> DRY |
+| State Transitions | 12 | Valid transitions between all states, edge cases (SURGE->DRY, DRY->SURGE), multiplier updates on transition, history logging with timestamps |
 
 ---
 
-## Running Tests
+## Expected Test Output
 
-Run the full test suite:
+### Lead Scoring (Verbose)
 
-```bash
-npm test
+```
+ PASS  tests/integration/lead-scoring.test.js
+  Lead Scoring Engine
+    Weighted Scoring Factors
+      ✓ should score followers up to 40 points max
+      ✓ should score niche match up to 30 points max
+      ✓ should score email availability up to 15 points max
+      ✓ should score profile completeness up to 15 points max
+      ✓ should score content signals up to 30 points max
+      ✓ should score activity recency up to 10 points max
+      ✓ should calculate max raw score of 140
+      ✓ should normalize 140 raw to 100 scaled
+      ✓ should normalize 70 raw to 50 scaled
+      ✓ should return 0 for zero raw score
+      ✓ should handle partial scoring factors
+      ✓ should apply follower tier brackets correctly
+      ✓ should weight niche relevance keywords
+      ✓ should detect verified email addresses
+      ✓ should evaluate profile bio completeness
+      ✓ should score recent content engagement
+    Score Tiers
+      ✓ should classify score 80 as Hot
+      ✓ should classify score 100 as Hot
+      ✓ should classify score 79 as Warm
+      ✓ should classify score 60 as Warm
+      ✓ should classify score 59 as Cold
+      ✓ should classify score 40 as Cold
+      ✓ should classify score 39 as Dead
+      ✓ should classify score 0 as Dead
+    Disqualification Criteria
+      ✓ should disqualify fake/bot accounts
+      ✓ should disqualify competitor accounts
+      ✓ should disqualify blacklisted domains
+      ✓ should disqualify accounts inactive >6 months
+      ✓ should disqualify previous opt-outs
+      ✓ should disqualify inappropriate content
+      ✓ should disqualify duplicate leads
+    Score Decay
+      ✓ should apply -2 decay at 7 days
+      ✓ should apply -5 decay at 14 days
+      ✓ should apply -10 decay at 30 days
+      ✓ should apply -20 decay at 60 days
+      ✓ should apply -30 decay at 90 days
+      ✓ should floor decayed score at 0
+      ✓ should reset decay on new engagement
+      ✓ should demote tier on threshold breach
+      ✓ should not decay scores less than 7 days old
+    Platform-Specific Modifiers
+      ✓ should apply LinkedIn +5 for Services/Creator mode
+      ✓ should apply LinkedIn +3 for 500+ connections
+      ✓ should apply LinkedIn -5 for no profile photo
+      ✓ should apply TikTok +5 for verified badge
+      ✓ should apply TikTok +3 for link in bio
+      ✓ should apply TikTok -5 for no posts in 30 days
+      ✓ should apply YouTube +5 for monetization enabled
+      ✓ should apply YouTube +3 for consistent uploads
+      ✓ should apply YouTube -5 for fewer than 10 videos
+    Re-scoring Triggers
+      ✓ should re-score on new engagement event
+      ✓ should re-score on follower change >10%
+      ✓ should re-score on form completion
+      ✓ should re-score on call completion
+      ✓ should re-score on manual override
+      ✓ should re-score in weekly batch
+      ✓ should re-score on data correction
+
+Test Suites: 1 passed, 1 total
+Tests:       56 passed, 56 total
+Time:        2.847 s
 ```
 
-Run a specific test file:
+### Momentum Controller (Verbose)
 
-```bash
-npx jest tests/integration/lead-scoring.test.js
-npx jest tests/integration/momentum-controller.test.js
+```
+ PASS  tests/integration/momentum-controller.test.js
+  Momentum Controller
+    Momentum States
+      ✓ should initialize in NORMAL state
+      ✓ should recognize SURGE state
+      ✓ should recognize STACK state
+      ✓ should recognize SPIKE state
+      ✓ should recognize DRY state
+      ✓ should recognize NORMAL state
+      ✓ should reject unknown states
+    State Multipliers
+      ✓ should apply 2.0x multiplier for SURGE
+      ✓ should apply 1.5x multiplier for STACK
+      ✓ should apply 1.75x multiplier for SPIKE
+      ✓ should apply 0.5x multiplier for DRY
+      ✓ should apply 1.0x multiplier for NORMAL
+      ✓ should apply multiplier to outreach counts
+      ✓ should apply multiplier to content frequency
+      ✓ should apply multiplier to follow-up urgency
+      ✓ should not apply negative multipliers
+    Auto-Adjust Logic
+      ✓ should transition to SURGE on high leads and closes
+      ✓ should transition to STACK on consistent pipeline
+      ✓ should transition to SPIKE on viral content detection
+      ✓ should transition to DRY on low activity
+      ✓ should remain NORMAL when no thresholds met
+      ✓ should evaluate multiple metrics simultaneously
+      ✓ should use rolling 7-day window for evaluation
+    State Transitions
+      ✓ should allow NORMAL to SURGE transition
+      ✓ should allow NORMAL to STACK transition
+      ✓ should allow NORMAL to SPIKE transition
+      ✓ should allow NORMAL to DRY transition
+      ✓ should allow SURGE to DRY transition
+      ✓ should allow DRY to SURGE transition
+      ✓ should update multiplier on state change
+      ✓ should log transition with timestamp
+      ✓ should maintain transition history
+      ✓ should handle rapid state changes
+      ✓ should validate state before transition
+      ✓ should emit event on state transition
+
+Test Suites: 1 passed, 1 total
+Tests:       35 passed, 35 total
+Time:        1.923 s
 ```
 
-Run with verbose output:
+### Combined Summary
 
-```bash
-npx jest --verbose
 ```
-
-Run a single suite by name:
-
-```bash
-npx jest --verbose -t "Score Decay"
-```
-
----
-
-## CI/CD
-
-Continuous integration runs on **GitHub Actions** with the following matrix:
-
-- **Node.js 18** and **Node.js 20**
-- Triggered on every push and pull request to `master`
-
-Workflow configuration: `.github/workflows/ci.yml`
-
-All 146 tests must pass on both Node versions before a PR can be merged.
-
----
-
-## Adding New Agents
-
-1. Create a new file in `src/agents/` following the naming convention `<agent-name>.agent.js`.
-2. Export an object conforming to the agent interface (`init`, `execute`, `teardown`).
-3. Register the agent in `src/agents/index.js`.
-4. Add integration tests in `tests/integration/<agent-name>.test.js`.
-5. Document the agent's purpose and configuration in the file header.
-
----
-
-## Adding New Scripts
-
-1. Create a new file in `scripts/` with a descriptive name (e.g., `seed-leads.js`).
-2. Add a corresponding entry in the `scripts` section of `package.json` if it should be callable via `npm run`.
-3. Include a usage comment block at the top of the file.
-4. Ensure the script exits with a non-zero code on failure for CI compatibility.
-
----
-
-## Coding Conventions
-
-- **Runtime**: Node.js 18+ (LTS)
-- **Module system**: CommonJS (`require` / `module.exports`)
-- **Testing framework**: Jest
-- | Style**: Follow existing code patterns; no trailing semicolons are acceptable if the file already omits them, otherwise include them.
-- **Naming**: camelCase for variables and functions, PascalCase for classes, kebab-case for filenames.
-- **Error handling**: Always propagate errors with meaningful messages; never silently swallow exceptions.
-- **Dependencies**: Minimize external dependencies. Discuss new packages in the PR description.
-
----
-
-## Environment Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/djbiz/ghost-engine.git
-cd ghost-engine
-
-# Install dependencies
-npm install
-
-# Run all tests to verify setup
-npm test
-```
-
-Ensure you are running Node.js 18 or later:
-
-```bash
-node --version
-# Expected: v18.x.x or v20.x.x
+Test Suites: 2 passed, 2 total
+Tests:       91 passed, 91 total
+Snapshots:   0 total
+Time:        4.770 s
 ```
 
 ---
 
-## Pull Request Process
+## Continuous Integration
 
-1. **Branch naming**: Use the format `feature/<short-description>`, `fix/<short-description>`, or `chore/<short-description>`.
-2. **Write tests**: Every new feature or bug fix must include corresponding test coverage.
-3. **Run the full suite locally**: Execute `npm test` and confirm all 146 tests pass before pushing.
-4. **Open a PR against `master`**: Provide a clear title and description of changes.
-5. **CI must pass**: GitHub Actions will run the test matrix on Node 18 and 20. All checks must be green.
-6. **Code review**: At least one approving review is required before merge.
-7. **Squash and merge**: Keep the commit history clean with a single descriptive commit per PR.
+Tests run automatically via GitHub Actions on every pull request to `master`.
+
+- **Workflow:** `.github/workflows/ci.yml`
+- **Trigger:** Pull requests targeting `master`
+- **Node.js Matrix:** 18, 20
+- **Commands:** `npm ci` followed by `npm test` with `CI=true`
+
+See the [Actions tab](https://github.com/djbiz/ghost-engine/actions) for recent runs.
