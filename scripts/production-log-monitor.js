@@ -1,270 +1,273 @@
 "use strict";
 
-const fs = require("fs");
-const path = require("path");
-const { execSync } = require("child_process");
-const os = require("os");
+var fs = require("fs");
+var path = require("path");
+var childProcess = require("child_process");
 
-const ROOT = path.resolve(__dirname, "..");
-const LOGS_DIR = path.join(ROOT, "logs");
-const PM2_LOGS_DIR = path.join(os.homedir(), ".pm2", "logs");
-const REPORT_PATH = path.join(LOGS_DIR, "health-report.txt");
+var ROOT = path.resolve(__dirname, "..");
+var LOGS_DIR = path.join(ROOT, "logs");
+var DAILY_DIR = path.join(ROOT, "daily");
+var TODAY = new Date().toISOString().slice(0, 10);
+var NOW = new Date();
+var REPORT_PATH = path.join(LOGS_DIR, "health-report.txt");
 
-const KNOWN_PROCESSES = ["ghost-engine", "heartbeat-0730", "heartbeat-0900", "heartbeat-1100", "heartbeat-2300"];
+var HEARTBEAT_SCHEDULE = [
+  { name: "heartbeat-0730", hour: 7, minute: 30, script: "heartbeat-morning.js", label: "Morning Lead Hunter" },
+  { name: "heartbeat-0900", hour: 9, minute: 0, script: "heartbeat-outreach.js", label: "Outreach + LinkedIn" },
+  { name: "heartbeat-1100", hour: 11, minute: 0, script: "heartbeat-content.js", label: "Fulfillment" },
+  { name: "heartbeat-2300", hour: 23, minute: 0, script: "heartbeat-nightly.js", label: "Nightly Consolidator" }
+];
 
-const HEARTBEATS = {
-  "heartbeat-0730": { cronTime: "7:30 AM ET", desc: "morning engagement check", tz: "America/New_York" },
-  "heartbeat-0900": { cronTime: "9:00 AM ET", desc: "outreach batch", tz: "America/New_York" },
-  "heartbeat-1100": { cronTime: "11:00 AM ET", desc: "content posting", tz: "America/New_York" },
-  "heartbeat-2300": { cronTime: "11:00 PM ET", desc: "nightly cleanup", tz: "America/New_York" }
-};
+var CRITICAL_PATTERNS = [
+  "FATAL", "uncaughtException", "unhandledRejection",
+  "ECONNREFUSED", "ENOMEM", "heap out of memory", "ENOSPC", "segmentation fault"
+];
 
-const CRITICAL_PATTERNS = ["uncaughtException", "ECONNREFUSED", "ENOMEM", "heap out of memory", "FATAL", "unhandledRejection"];
-const MAX_LOG_SIZE = 100 * 1024 * 1024;
-const MISSED_THRESHOLD_MS = 25 * 60 * 60 * 1000;
-const RECENCY_MS = 24 * 60 * 60 * 1000;
+function ensureDir(dir) {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+}
 
-function checkPm2Processes() {
-  var res = { available: false, processes: [], warnings: [], errors: [] };
+function getPm2Status() {
+  var result = { available: false, processes: [], issues: [] };
   try {
-    var raw = execSync("pm2 jlist", { encoding: "utf8", timeout: 15000, stdio: ["pipe", "pipe", "pipe"] });
-    var list;
-    try { list = JSON.parse(raw); } catch (e) { res.errors.push("Failed to parse PM2 output: " + e.message); return res; }
-    res.available = true;
-    if (!Array.isArray(list) || list.length === 0) { res.warnings.push("PM2 running but no processes found"); return res; }
-    var found = [];
+    var raw = childProcess.execSync("pm2 jlist", { encoding: "utf8", timeout: 10000 });
+    var list = JSON.parse(raw);
+    result.available = true;
     for (var i = 0; i < list.length; i++) {
       var p = list[i];
-      var name = p.name || "unknown";
-      var status = (p.pm2_env && p.pm2_env.status) || "unknown";
-      var restarts = (p.pm2_env && p.pm2_env.restart_time) || 0;
-      var uptime = (p.pm2_env && p.pm2_env.pm_uptime) || 0;
-      var mem = (p.monit && p.monit.memory) || 0;
-      found.push(name);
-      var uptimeH = uptime > 0 ? Math.round((Date.now() - uptime) / 3600000 * 10) / 10 : 0;
-      var memMB = Math.round(mem / 1048576 * 10) / 10;
-      res.processes.push({ name: name, pid: p.pid || "N/A", status: status, restarts: restarts, uptimeH: uptimeH, memMB: memMB });
-      if (status === "stopped" || status === "errored") { res.errors.push("Process " + name + " is " + status); }
-      if (restarts > 5) { res.warnings.push(name + " restarted " + restarts + " times (threshold: 5)"); }
-      else if (restarts > 3) { res.warnings.push(name + " elevated restarts: " + restarts); }
+      var info = {
+        name: p.name || "unknown",
+        status: (p.pm2_env && p.pm2_env.status) || "unknown",
+        pid: p.pid || 0,
+        uptime: p.pm2_env ? (NOW.getTime() - (p.pm2_env.pm_uptime || 0)) : 0,
+        restarts: (p.pm2_env && p.pm2_env.restart_time) || 0,
+        memory: (p.monit && p.monit.memory) || 0,
+        cpu: (p.monit && p.monit.cpu) || 0
+      };
+      result.processes.push(info);
+      if (info.status !== "online") {
+        result.issues.push("CRITICAL: Process " + info.name + " is " + info.status);
+      }
+      if (info.restarts > 5) {
+        result.issues.push("WARNING: Process " + info.name + " has restarted " + info.restarts + " times");
+      }
+      if (info.memory > 500 * 1024 * 1024) {
+        result.issues.push("WARNING: Process " + info.name + " using " + Math.round(info.memory / 1024 / 1024) + "MB memory");
+      }
     }
-    for (var k = 0; k < KNOWN_PROCESSES.length; k++) {
-      if (found.indexOf(KNOWN_PROCESSES[k]) === -1) { res.errors.push("Expected process not found: " + KNOWN_PROCESSES[k]); }
+    if (list.length === 0) {
+      result.issues.push("WARNING: No PM2 processes found");
     }
-  } catch (err) {
-    if (err.message && err.message.indexOf("ENOENT") !== -1) { res.warnings.push("PM2 is not installed or not in PATH"); }
-    else { res.warnings.push("PM2 check failed: " + (err.message || String(err))); }
+  } catch (e) {
+    result.issues.push("INFO: PM2 not available or no processes running (" + (e.message || "unknown error").slice(0, 80) + ")");
   }
-  return res;
+  return result;
 }
 
 function checkHeartbeats() {
-  var res = { beats: {}, warnings: [], errors: [] };
-  var now = Date.now();
-  var names = Object.keys(HEARTBEATS);
-  for (var i = 0; i < names.length; i++) {
-    var name = names[i];
-    var cfg = HEARTBEATS[name];
-    var beat = { name: name, cronTime: cfg.cronTime, description: cfg.desc, lastSeen: null, logFileExists: false, logFileModified: null, status: "unknown" };
-    var lastExec = null;
-    var pm2Logs = [path.join(PM2_LOGS_DIR, name + "-out.log"), path.join(PM2_LOGS_DIR, name + "-error.log")];
-    for (var j = 0; j < pm2Logs.length; j++) {
+  var result = { beats: [], issues: [] };
+  var pm2LogDir = path.join(process.env.HOME || "/root", ".pm2", "logs");
+  for (var i = 0; i < HEARTBEAT_SCHEDULE.length; i++) {
+    var beat = HEARTBEAT_SCHEDULE[i];
+    var beatInfo = { name: beat.name, label: beat.label, expectedHour: beat.hour, expectedMinute: beat.minute, lastRun: null, status: "unknown" };
+    var logFile = path.join(pm2LogDir, beat.name + "-out.log");
+    var altLog = path.join(LOGS_DIR, beat.name + ".log");
+    var dailyLog = path.join(DAILY_DIR, TODAY + "-" + beat.name + ".log");
+    var targetLog = null;
+    if (fs.existsSync(logFile)) { targetLog = logFile; }
+    else if (fs.existsSync(altLog)) { targetLog = altLog; }
+    else if (fs.existsSync(dailyLog)) { targetLog = dailyLog; }
+    if (targetLog) {
       try {
-        if (fs.existsSync(pm2Logs[j])) {
-          var mt = fs.statSync(pm2Logs[j]).mtime.getTime();
-          if (!lastExec || mt > lastExec) { lastExec = mt; }
-        }
-      } catch (e) { /* ignore */ }
-    }
-    try {
-      if (fs.existsSync(LOGS_DIR)) {
-        var files = fs.readdirSync(LOGS_DIR);
-        for (var f = 0; f < files.length; f++) {
-          if (files[f].indexOf(name) !== -1) {
-            var fp = path.join(LOGS_DIR, files[f]);
-            try {
-              var st = fs.statSync(fp);
-              beat.logFileExists = true;
-              var mt2 = st.mtime.getTime();
-              beat.logFileModified = new Date(mt2).toISOString();
-              if (!lastExec || mt2 > lastExec) { lastExec = mt2; }
-            } catch (e) { /* ignore */ }
-          }
-        }
+        var stat = fs.statSync(targetLog);
+        beatInfo.lastRun = stat.mtime.toISOString();
+        var ageMs = NOW.getTime() - stat.mtime.getTime();
+        var ageHours = ageMs / (1000 * 60 * 60);
+        if (ageHours > 25) { beatInfo.status = "missed"; result.issues.push("CRITICAL: " + beat.label + " (" + beat.name + ") last ran " + Math.round(ageHours) + "h ago"); }
+        else if (ageHours > 13) { beatInfo.status = "stale"; result.issues.push("WARNING: " + beat.label + " (" + beat.name + ") last ran " + Math.round(ageHours) + "h ago"); }
+        else { beatInfo.status = "ok"; }
+      } catch (e) {
+        beatInfo.status = "error";
+        result.issues.push("WARNING: Could not read log for " + beat.name + ": " + (e.message || "unknown"));
       }
-    } catch (e) { res.warnings.push("Cannot scan logs dir for " + name + ": " + e.message); }
-    if (lastExec) {
-      beat.lastSeen = new Date(lastExec).toISOString();
-      var elapsed = now - lastExec;
-      if (elapsed > MISSED_THRESHOLD_MS) {
-        beat.status = "missed";
-        res.errors.push(name + " (" + cfg.desc + ") no execution in " + Math.round(elapsed / 3600000) + "h (threshold: 25h)");
-      } else { beat.status = "ok"; }
     } else {
-      beat.status = "no-evidence";
-      res.warnings.push("No execution evidence for " + name + " (" + cfg.desc + ")");
+      beatInfo.status = "no-log";
+      result.issues.push("INFO: No log file found for " + beat.label + " (" + beat.name + ")");
     }
-    if (!beat.logFileExists) { res.warnings.push("No log file in logs/ for " + name); }
-    res.beats[name] = beat;
+    result.beats.push(beatInfo);
   }
-  return res;
+  return result;
 }
 
-function scanApplicationLogs() {
-  var res = { filesScanned: 0, totalErrors: 0, totalWarnings: 0, criticalPatterns: [], recentErrors: [], oversizedFiles: [], fileDetails: [], warnings: [], errors: [] };
-  var now = Date.now();
-  var dirs = [];
-  if (fs.existsSync(LOGS_DIR)) { dirs.push(LOGS_DIR); }
-  if (fs.existsSync(PM2_LOGS_DIR)) { dirs.push(PM2_LOGS_DIR); }
-  if (dirs.length === 0) { res.warnings.push("No log directories found"); return res; }
+function scanLogsForCritical() {
+  var result = { scanned: 0, matches: [], issues: [] };
+  var dirs = [LOGS_DIR, DAILY_DIR];
   for (var d = 0; d < dirs.length; d++) {
-    var files;
-    try { files = fs.readdirSync(dirs[d]); } catch (e) { res.warnings.push("Cannot read " + dirs[d] + ": " + e.message); continue; }
+    if (!fs.existsSync(dirs[d])) { continue; }
+    var files = fs.readdirSync(dirs[d]);
     for (var f = 0; f < files.length; f++) {
-      if (!files[f].endsWith(".log") && !files[f].endsWith(".txt")) { continue; }
-      var fp = path.join(dirs[d], files[f]);
-      var stat;
-      try { stat = fs.statSync(fp); } catch (e) { continue; }
-      if (!stat.isFile()) { continue; }
-      if (stat.size > MAX_LOG_SIZE) { res.oversizedFiles.push({ path: fp, sizeMB: Math.round(stat.size / 1048576) }); }
-      if (now - stat.mtime.getTime() > RECENCY_MS) { continue; }
-      res.filesScanned++;
-      var info = { path: fp, sizeMB: Math.round(stat.size / 1048576 * 100) / 100, modified: stat.mtime.toISOString(), errorCount: 0, warnCount: 0, criticalHits: [] };
+      var filePath = path.join(dirs[d], files[f]);
       try {
-        var content = fs.readFileSync(fp, "utf8");
+        var stat = fs.statSync(filePath);
+        if (!stat.isFile()) { continue; }
+        var ageMs = NOW.getTime() - stat.mtime.getTime();
+        if (ageMs > 48 * 60 * 60 * 1000) { continue; }
+        result.scanned++;
+        var content = fs.readFileSync(filePath, "utf8");
         var lines = content.split("\n");
-        var errLines = [];
-        for (var li = 0; li < lines.length; li++) {
-          var line = lines[li];
-          var upper = line.toUpperCase();
-          if (upper.indexOf("ERROR") !== -1) { info.errorCount++; errLines.push(line.trim()); }
-          if (upper.indexOf("WARN") !== -1) { info.warnCount++; }
-          for (var cp = 0; cp < CRITICAL_PATTERNS.length; cp++) {
-            if (line.indexOf(CRITICAL_PATTERNS[cp]) !== -1) {
-              info.criticalHits.push(CRITICAL_PATTERNS[cp]);
-              if (res.criticalPatterns.indexOf(CRITICAL_PATTERNS[cp]) === -1) { res.criticalPatterns.push(CRITICAL_PATTERNS[cp]); }
+        var lastLines = lines.slice(-200);
+        for (var l = 0; l < lastLines.length; l++) {
+          for (var p = 0; p < CRITICAL_PATTERNS.length; p++) {
+            if (lastLines[l].indexOf(CRITICAL_PATTERNS[p]) !== -1) {
+              result.matches.push({ file: files[f], pattern: CRITICAL_PATTERNS[p], line: lastLines[l].slice(0, 200) });
+              if (result.matches.length >= 50) { break; }
             }
           }
+          if (result.matches.length >= 50) { break; }
         }
-        var last10 = errLines.slice(-10);
-        for (var e = 0; e < last10.length; e++) { res.recentErrors.push({ file: files[f], line: last10[e].substring(0, 500) }); }
-        res.totalErrors += info.errorCount;
-        res.totalWarnings += info.warnCount;
-      } catch (readErr) { res.warnings.push("Cannot read " + fp + ": " + readErr.message); }
-      res.fileDetails.push(info);
+      } catch (e) { /* skip unreadable files */ }
+      if (result.matches.length >= 50) { break; }
     }
   }
-  if (res.recentErrors.length > 10) { res.recentErrors = res.recentErrors.slice(-10); }
-  return res;
+  if (result.matches.length > 0) {
+    result.issues.push("CRITICAL: Found " + result.matches.length + " critical pattern matches in recent logs");
+  }
+  return result;
 }
 
-function determineStatus(pm2, hb, logs) {
-  if (pm2.errors.length > 0) { return "CRITICAL"; }
-  var missed = Object.keys(hb.beats).filter(function (k) { return hb.beats[k].status === "missed"; });
-  if (missed.length > 1) { return "CRITICAL"; }
-  if (logs.criticalPatterns.length > 0) { return "CRITICAL"; }
-  if (pm2.warnings.length > 0) { return "DEGRADED"; }
-  if (hb.warnings.length > 0 || hb.errors.length > 0) { return "DEGRADED"; }
-  if (missed.length === 1) { return "DEGRADED"; }
-  if (logs.totalErrors > 0 || logs.oversizedFiles.length > 0 || logs.warnings.length > 0) { return "DEGRADED"; }
-  return "HEALTHY";
-}
-
-function generateReport() {
-  var startTime = Date.now();
-  console.log("========================================");
-  console.log("  Production Log Monitor - ghost-engine");
-  console.log("========================================\n");
-
-  console.log("[1/4] Checking PM2 processes...");
-  var pm2 = checkPm2Processes();
-  console.log("[2/4] Verifying heartbeat cron execution...");
-  var hb = checkHeartbeats();
-  console.log("[3/4] Scanning application logs...");
-  var logs = scanApplicationLogs();
-  console.log("[4/4] Generating health report...\n");
-
-  var status = determineStatus(pm2, hb, logs);
-  var duration = Date.now() - startTime;
-  var ts = new Date().toISOString();
-
-  var report = { timestamp: ts, checkDurationMs: duration, overallStatus: status, pm2: pm2, heartbeats: hb, logs: logs };
-  var sep = "============================================================";
-  var sep2 = "------------------------------------------------------------";
-  var out = [];
-  out.push(sep);
-  out.push("PRODUCTION HEALTH REPORT - ghost-engine");
-  out.push(sep);
-  out.push("Timestamp:      " + ts);
-  out.push("Check Duration: " + duration + "ms");
-  out.push("Overall Status: " + status);
-  out.push("");
-  out.push(sep2);
-  out.push("PM2 PROCESS STATUS");
-  out.push(sep2);
-  if (!pm2.available) { out.push("  PM2 not available"); }
-  else if (pm2.processes.length === 0) { out.push("  No processes found"); }
-  else {
-    for (var i = 0; i < pm2.processes.length; i++) {
-      var p = pm2.processes[i];
-      out.push("  " + p.name + " | status=" + p.status + " | pid=" + p.pid + " | restarts=" + p.restarts + " | uptime=" + p.uptimeH + "h | mem=" + p.memMB + "MB");
-    }
-  }
-  for (var i = 0; i < pm2.warnings.length; i++) { out.push("  [WARN] " + pm2.warnings[i]); }
-  for (var i = 0; i < pm2.errors.length; i++) { out.push("  [ERROR] " + pm2.errors[i]); }
-  out.push("");
-  out.push(sep2);
-  out.push("HEARTBEAT CRON STATUS");
-  out.push(sep2);
-  var bkeys = Object.keys(hb.beats);
-  for (var i = 0; i < bkeys.length; i++) {
-    var b = hb.beats[bkeys[i]];
-    out.push("  " + b.name + " | " + b.cronTime + " | status=" + b.status + " | last=" + (b.lastSeen || "never"));
-    out.push("    " + b.description + (b.logFileExists ? " | log modified: " + b.logFileModified : " | no log file"));
-  }
-  for (var i = 0; i < hb.warnings.length; i++) { out.push("  [WARN] " + hb.warnings[i]); }
-  for (var i = 0; i < hb.errors.length; i++) { out.push("  [ERROR] " + hb.errors[i]); }
-  out.push("");
-  out.push(sep2);
-  out.push("APPLICATION LOG SCAN");
-  out.push(sep2);
-  out.push("  Files scanned:     " + logs.filesScanned);
-  out.push("  Total errors:      " + logs.totalErrors);
-  out.push("  Total warnings:    " + logs.totalWarnings);
-  out.push("  Critical patterns: " + (logs.criticalPatterns.length > 0 ? logs.criticalPatterns.join(", ") : "none"));
-  for (var i = 0; i < logs.oversizedFiles.length; i++) { out.push("  [OVERSIZE] " + logs.oversizedFiles[i].path + " (" + logs.oversizedFiles[i].sizeMB + "MB)"); }
-  for (var i = 0; i < logs.fileDetails.length; i++) {
-    var fd = logs.fileDetails[i];
-    out.push("  " + fd.path + " (" + fd.sizeMB + "MB) errors=" + fd.errorCount + " warns=" + fd.warnCount + (fd.criticalHits.length > 0 ? " CRITICAL:" + fd.criticalHits.join(",") : ""));
-  }
-  if (logs.recentErrors.length > 0) {
-    out.push("  Last error lines:");
-    for (var i = 0; i < logs.recentErrors.length; i++) { out.push("    [" + logs.recentErrors[i].file + "] " + logs.recentErrors[i].line); }
-  }
-  out.push("");
-  out.push(sep);
-  out.push("OVERALL STATUS: " + status);
-  out.push(sep);
-
-  var reportText = out.join("\n");
+function checkDiskSpace() {
+  var result = { available: false, info: null, issues: [] };
   try {
-    if (!fs.existsSync(LOGS_DIR)) { fs.mkdirSync(LOGS_DIR, { recursive: true }); }
-    fs.writeFileSync(REPORT_PATH, reportText, "utf8");
-    console.log("Report written to: " + REPORT_PATH);
-  } catch (e) { console.error("Failed to write report: " + e.message); }
-  console.log("");
-  console.log(reportText);
-  return { status: status, report: report };
+    var raw = childProcess.execSync("df -h " + ROOT, { encoding: "utf8", timeout: 5000 });
+    var lines = raw.trim().split("\n");
+    if (lines.length >= 2) {
+      var parts = lines[1].split(/\s+/);
+      result.available = true;
+      result.info = { filesystem: parts[0], size: parts[1], used: parts[2], available: parts[3], usePercent: parts[4] };
+      var pct = parseInt(parts[4], 10);
+      if (pct > 90) { result.issues.push("CRITICAL: Disk usage at " + parts[4]); }
+      else if (pct > 80) { result.issues.push("WARNING: Disk usage at " + parts[4]); }
+    }
+  } catch (e) {
+    result.issues.push("INFO: Could not check disk space: " + (e.message || "unknown").slice(0, 80));
+  }
+  return result;
 }
 
-if (require.main === module) {
-  var result = generateReport();
-  process.exit(result.status === "HEALTHY" ? 0 : 1);
+function checkLogRotation() {
+  var result = { issues: [] };
+  if (!fs.existsSync(LOGS_DIR)) { return result; }
+  var files = fs.readdirSync(LOGS_DIR);
+  for (var i = 0; i < files.length; i++) {
+    var filePath = path.join(LOGS_DIR, files[i]);
+    try {
+      var stat = fs.statSync(filePath);
+      if (stat.isFile() && stat.size > 50 * 1024 * 1024) {
+        result.issues.push("WARNING: Log file " + files[i] + " is " + Math.round(stat.size / 1024 / 1024) + "MB - consider rotation");
+      }
+    } catch (e) { /* skip */ }
+  }
+  return result;
 }
 
-module.exports = {
-  checkPm2Processes: checkPm2Processes,
-  checkHeartbeats: checkHeartbeats,
-  scanApplicationLogs: scanApplicationLogs,
-  generateReport: generateReport
-};
+function generateReport(pm2Status, heartbeats, logScan, diskSpace, logRotation) {
+  var lines = [];
+  var allIssues = [].concat(pm2Status.issues, heartbeats.issues, logScan.issues, diskSpace.issues, logRotation.issues);
+  var critCount = 0;
+  var warnCount = 0;
+  for (var i = 0; i < allIssues.length; i++) {
+    if (allIssues[i].indexOf("CRITICAL") === 0) { critCount++; }
+    else if (allIssues[i].indexOf("WARNING") === 0) { warnCount++; }
+  }
+
+  lines.push("=== Ghost Engine Health Report ===");
+  lines.push("Generated: " + NOW.toISOString());
+  lines.push("Status: " + (critCount > 0 ? "CRITICAL" : warnCount > 0 ? "WARNING" : "HEALTHY"));
+  lines.push("");
+
+  lines.push("--- PM2 Processes ---");
+  if (pm2Status.available) {
+    for (var i = 0; i < pm2Status.processes.length; i++) {
+      var p = pm2Status.processes[i];
+      lines.push("  " + p.name + ": " + p.status + " (pid=" + p.pid + ", restarts=" + p.restarts + ", mem=" + Math.round(p.memory / 1024 / 1024) + "MB)");
+    }
+  } else {
+    lines.push("  PM2 not available");
+  }
+  lines.push("");
+
+  lines.push("--- Heartbeat Schedule ---");
+  for (var i = 0; i < heartbeats.beats.length; i++) {
+    var b = heartbeats.beats[i];
+    lines.push("  " + b.label + " (" + b.name + "): " + b.status + (b.lastRun ? " [last: " + b.lastRun + "]" : ""));
+  }
+  lines.push("");
+
+  lines.push("--- Log Scan ---");
+  lines.push("  Files scanned: " + logScan.scanned);
+  lines.push("  Critical matches: " + logScan.matches.length);
+  if (logScan.matches.length > 0) {
+    for (var i = 0; i < Math.min(logScan.matches.length, 10); i++) {
+      var m = logScan.matches[i];
+      lines.push("    [" + m.pattern + "] " + m.file + ": " + m.line);
+    }
+  }
+  lines.push("");
+
+  lines.push("--- Disk Space ---");
+  if (diskSpace.available && diskSpace.info) {
+    lines.push("  Usage: " + diskSpace.info.usePercent + " (" + diskSpace.info.used + " of " + diskSpace.info.size + ")");
+  } else {
+    lines.push("  Disk space check unavailable");
+  }
+  lines.push("");
+
+  if (allIssues.length > 0) {
+    lines.push("--- Issues (" + allIssues.length + ") ---");
+    for (var i = 0; i < allIssues.length; i++) {
+      lines.push("  " + allIssues[i]);
+    }
+  } else {
+    lines.push("--- No Issues Detected ---");
+  }
+  lines.push("");
+
+  return lines.join("\n");
+}
+
+function main() {
+  console.log("[" + NOW.toISOString() + "] Production Log Monitor starting...");
+
+  ensureDir(LOGS_DIR);
+  ensureDir(DAILY_DIR);
+
+  var pm2Status = getPm2Status();
+  var heartbeats = checkHeartbeats();
+  var logScan = scanLogsForCritical();
+  var diskSpace = checkDiskSpace();
+  var logRotation = checkLogRotation();
+
+  var report = generateReport(pm2Status, heartbeats, logScan, diskSpace, logRotation);
+
+  try {
+    fs.writeFileSync(REPORT_PATH, report);
+    console.log("Health report written to: " + REPORT_PATH);
+  } catch (e) {
+    console.error("Failed to write health report: " + (e.message || "unknown"));
+  }
+
+  var dailyReport = path.join(DAILY_DIR, TODAY + "-health-report.txt");
+  try {
+    fs.writeFileSync(dailyReport, report);
+    console.log("Daily report written to: " + dailyReport);
+  } catch (e) {
+    console.error("Failed to write daily report: " + (e.message || "unknown"));
+  }
+
+  console.log("\n" + report);
+  console.log("[" + NOW.toISOString() + "] Production Log Monitor complete.");
+}
+
+main();
