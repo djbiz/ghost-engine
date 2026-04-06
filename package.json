@@ -1,7 +1,7 @@
 {
   "name": "ghost-engine",
   "version": "1.0.0",
-  "description": "AI-powered monetization engine for creators \u2014 powered by Zo, your autonomous AI COO",
+  "description": "AI-powered monetization engine for creators — powered by Zo, your autonomous AI COO",
   "main": "scripts/pipeline-automation.js",
   "scripts": {
     "start": "node scripts/pipeline-automation.js",
@@ -12,7 +12,9 @@
     "close": "node scripts/speed-close-trigger.js",
     "momentum": "node scripts/momentum-controller.js",
     "proof": "node scripts/proof-loop.js",
-    "launch": "node scripts/launch-countdown.js"
+    "launch": "node scripts/launch-countdown.js",
+    "temporal:bootstrap": "node scripts/temporal-bootstrap.js",
+    "temporal:worker": "node scripts/temporal-worker.js"
   },
   "keywords": [
     "ai",
@@ -30,6 +32,9 @@
     "csv-writer": "^1.6.0",
     "dotenv": "^16.3.0",
     "node-cron": "^3.0.3",
-    "stripe": "^14.0.0"
+    "stripe": "^14.0.0",
+    "@temporalio/client": "^1.11.0",
+    "@temporalio/worker": "^1.11.0",
+    "@temporalio/workflow": "^1.11.0"
   }
 }
