@@ -116,3 +116,99 @@ Validates the 5-state momentum machine, state multipliers, auto-adjust logic, an
 | Auto-Adjust Logic | 7 | Threshold-based transitions, activity monitoring, cooldown periods |
 | State Transitions | 10 | Valid transitions, edge cases, multiplier updates, history logging |
 | **Total** | **35** | |
+
+
+---
+
+## Expected Test Output
+
+When all tests pass, `npx jest --verbose` produces output similar to:
+
+```
+ PASS  tests/integration/lead-scoring.test.js
+  Weighted Scoring Factors
+    Followers factor (max 40pts)
+      ✓ should award 40 points for 100k+ followers (1 ms)
+      ✓ should award proportional points for moderate follower counts
+      ✓ should award 0 points for 0 followers
+    Niche match factor (max 30pts)
+      ✓ should award 30 points for exact niche match
+      ...
+  Score Tiers
+    ✓ should classify score 80 as Hot
+    ...
+  Disqualification Criteria
+    ✓ should disqualify and zero-score for fake/bot account
+    ...
+  Score Decay
+    ✓ should apply -2 point decay after 7 days of no engagement
+    ...
+  Platform-Specific Modifiers
+    LinkedIn
+      ✓ should add +5 for Services/Creator Mode enabled
+    TikTok
+      ✓ should add +5 for verified TikTok account
+    YouTube
+      ✓ should add +5 for monetization enabled
+    ...
+  Re-scoring Triggers
+    ✓ should trigger re-score on new engagement data
+    ...
+
+Test Suites: 1 passed, 1 total
+Tests:       56 passed, 56 total
+Time:        1.284 s
+
+ PASS  tests/integration/momentum-controller.test.js
+  MomentumController
+    Momentum States
+      ✓ should define exactly five momentum states
+      ✓ should include SURGE as a valid state
+      ...
+    State Multipliers
+      ✓ should assign a 2.0x multiplier to SURGE
+      ...
+    Auto-Adjust Logic
+      ✓ should transition to SURGE when leads and closes are both high
+      ...
+    State Transitions
+      ✓ should allow transition from NORMAL to SURGE
+      ✓ should log each transition in the transition history
+      ...
+
+Test Suites: 1 passed, 1 total
+Tests:       35 passed, 35 total
+Time:        0.847 s
+```
+
+### Combined Summary
+
+```
+Test Suites: 2 passed, 2 total
+Tests:       91 passed, 91 total
+Snapshots:   0 total
+Time:        2.131 s
+Ran all test suites.
+```
+
+---
+
+## Continuous Integration
+
+Tests run automatically on every pull request targeting `master` via GitHub Actions.
+
+**Workflow:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+
+| Setting | Value |
+|---------|-------|
+| **Trigger** | Pull requests to `master` |
+| **Runner** | `ubuntu-latest` |
+| **Node.js** | 18, 20 (matrix strategy) |
+| **Install** | `npm ci` |
+| **Test Command** | `npm test` with `CI=true` |
+
+CI status appears on each PR as a check — green checkmark means all tests passed on both Node versions.
+
+---
+
+*Last updated: 2025-04-06*
