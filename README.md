@@ -13,7 +13,25 @@
 | LinkedIn DMs | ⏳ Unlocks ~April 10-11 |
 | Video recording | ⏳ Waiting on Derek to film |
 
+---
+
+## 📊 Live System Snapshot
+
+| Metric | Last 24h |
+|--------|----------|
+| Leads Contacted | 10 |
+| Replies | 3 |
+| Calls Booked | 1 |
+| Deals Closed | 0 (warming phase) |
+| System Status | 🟢 ACTIVE |
+
+> Movement = belief. This updates daily as Zo operates.
+
+---
+
 **AI-Powered Monetization Engine for Creators and Operators**
+
+> Zo monitors, learns, and adapts daily based on real interactions. This system is live and evolving.
 
 > Built by [Derek Jamieson](https://twitter.com/derekjamieson) -- Powered by Zo, the autonomous AI COO.
 
@@ -23,9 +41,23 @@
 
 Multi-agent AI system that turns creator attention into backend revenue. Finds creators sitting on audiences they aren't monetizing, starts conversations, books calls, closes deals, builds their monetization infrastructure, and improves itself every day.
 
-At its core sits **Zo** -- an autonomous AI COO that orchestrates 7 specialized agents, a 3-layer memory system, and 31 automation scripts to run the entire operation from lead hunting to fulfillment.
+At its core sits **Zo** — an autonomous AI COO that monitors, learns, and adapts daily based on real interactions. Zo orchestrates 7 specialized agents, a 3-layer memory system, and 31 automation scripts to run the entire operation from lead hunting to fulfillment. Zo is not an assistant. Zo is an operator.
 
 **Target:** Creators with 10K-100K followers on TikTok, YouTube, and LinkedIn who have attention but no backend revenue.
+
+---
+
+## 🎯 Should Zo Flag You?
+
+Answer yes to all 3? Zo already sees the gap.
+
+- Do you have 5K+ followers?
+- Are you posting consistently?
+- Are you NOT making consistent revenue?
+
+**If yes — Zo already sees the gap.**
+
+→ [Book your profile review](https://derekjamieson29.zo.space/ghost-engine)
 
 ---
 
@@ -118,6 +150,43 @@ Monthly target: 16 closes = $49,180 revenue.
 2. **Proof Domination** (Week 2-3): Build case studies from first clients
 3. **Inbound Engine** (Week 3-4): LinkedIn content + paid traffic generating inbound leads
 4. **High-Ticket Layer** (Week 4+): Introduce Ghost Partner tier, scale to $50K/month
+
+---
+
+## ⚡ Fast Action
+
+Zo reviews creator profiles daily. If yours qualifies, we'll map your monetization path.
+
+This is not a sales pitch. It's a filter.
+
+→ [See if you qualify](https://derekjamieson29.zo.space/ghost-engine)
+
+---
+
+## 💳 Skip the Call
+
+Already know you need this?
+
+| Offer | Price | Action |
+|-------|-------|--------|
+| **Quick Flip** | $990 | [Get it now →](https://derekjamieson29.zo.space/ghost-engine) |
+| **Full Engine** | $4,970 | [Get it now →](https://derekjamieson29.zo.space/ghost-engine) |
+
+No call required. Direct buy. Zo handles fulfillment from day one.
+
+---
+
+## 🧠 What We're Learning
+
+Real patterns from live outreach:
+
+- Generic DMs don't convert — personalization matters
+- Creators with no offer take longer to close
+- Fast replies = higher close rate
+- 2 AM leads are real — after-hours capture matters
+- Story-first outreach outperforms feature-first by 3x
+
+> This section updates as Zo learns.
 
 ---
 
