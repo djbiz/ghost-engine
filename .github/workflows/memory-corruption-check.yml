@@ -1,0 +1,35 @@
+name: "Memory Corruption Check"
+
+on:
+  schedule:
+    # Run 30 minutes after each heartbeat cycle
+    - cron: '30 7,9,11,23 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  memory-integrity:
+    name: Validate Memory Layer Integrity
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Run memory corruption detector
+        run: node scripts/memory-corruption-detector.js
+
+      - name: Upload integrity report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: memory-integrity-report
+          path: logs/memory-integrity-report.txt
+          retention-days: 7
