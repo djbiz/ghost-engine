@@ -175,6 +175,8 @@ function extractEventData(event) {
 /* -- Compute stats from stored events -- */
 function computeStats() {
   let successfulPayments = 0;
+  let failedPayments = 0;
+  let failedRevenue = 0;
   let totalRevenue = 0;
   const activeSubs = new Set();
 
@@ -186,6 +188,11 @@ function computeStats() {
     ) {
       successfulPayments++;
       totalRevenue += ev.amount || 0;
+    }
+
+    if (ev.type === 'payment_intent.payment_failed' || ev.type === 'invoice.payment_failed') {
+      failedPayments++;
+      failedRevenue += ev.amount || 0;
     }
 
     if (ev.type === 'charge.refunded') {
@@ -207,6 +214,8 @@ function computeStats() {
   return {
     totalEvents: events.length,
     successfulPayments: successfulPayments,
+    failedPayments: failedPayments,
+    failedRevenue: failedRevenue,
     activeSubscriptions: activeSubs.size,
     totalRevenue: totalRevenue
   };
