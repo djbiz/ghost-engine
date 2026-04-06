@@ -161,4 +161,79 @@ Three scripts providing centralized lead management, workflow automation, and de
 ### pipeline-automation.js
 **Size:** 5190 bytes | **Category:** Pipeline & CRM
 
-**Purpose:** Workflow automation monitoring CRM transitions and triggering downstream actions. Rules engine evaluates score thresholds, time-in-stage limits, engagement signals for auto-ad
+**Purpose:** Workflow automation monitoring CRM transitions and triggering downstream actions. Rules engine evaluates score thresholds, time-in-stage limits, engagement signals for auto-advance/flag. Daily pipeline health reports with conversion rates.
+
+| Field | Details |
+|-------|---------|
+| **Key Functions** | `evaluateRules()`, `autoAdvance()`, `generatePipelineReport()`, `identifyBottlenecks()` |
+| **Dependencies** | node-cron; reads crm.js |
+| **Integration Points** | Monitors crm.js; triggers outreach-engine, proposal-generator; feeds dashboard |
+
+---
+
+### deal-tracker.js
+**Size:** 4580 bytes | **Category:** Pipeline & CRM
+
+**Purpose:** Deal-level tracking from proposal through close. Manages deal values, win probabilities, expected close dates, negotiation notes. Weighted pipeline value calculations. Alerts on stale deals exceeding 14-day thresholds.
+
+| Field | Details |
+|-------|---------|
+| **Key Functions** | `createDeal()`, `updateDealStatus()`, `calculateWeightedPipeline()`, `getStaleDeals()`, `forecastCloseDate()` |
+| **Dependencies** | fs, moment; reads crm.js |
+| **Integration Points** | Updated by pipeline-automation.js; feeds revenue-forecast.js and dashboard |
+
+---
+
+## 4. Closing
+
+Four scripts for proposal generation, contract management, payment processing, and revenue forecasting.
+
+---
+
+### proposal-generator.js
+**Size:** 5430 bytes | **Category:** Closing
+
+**Purpose:** Dynamic proposal builder generating branded PDF proposals with creator-specific pricing, scope of work, deliverable timelines, and ROI projections. Pulls creator data from CRM, applies pricing rules based on follower tier and niche category.
+
+| Field | Details |
+|-------|---------|
+| **Key Functions** | `generateProposal()`, `applyPricingRules()`, `calculateROIProjection()`, `exportToPDF()` |
+| **Dependencies** | pdfkit, handlebars, fs; templates in templates/proposals/ |
+| **Integration Points** | Triggered by pipeline-automation.js; reads crm.js; outputs to deals/ directory |
+
+---
+
+### contract-manager.js
+**Size:** 3950 bytes | **Category:** Closing
+
+**Purpose:** Contract lifecycle management handling template selection, variable population, digital signature coordination via DocuSign API, and executed contract storage. Tracks signature status and sends reminders at 3d and 7d intervals.
+
+| Field | Details |
+|-------|---------|
+| **Key Functions** | `createContract()`, `sendForSignature()`, `checkSignatureStatus()`, `storeExecutedContract()` |
+| **Dependencies** | axios, fs; env DOCUSIGN_API_KEY, DOCUSIGN_ACCOUNT_ID |
+| **Integration Points** | Triggered after proposal acceptance; updates deal-tracker.js; triggers payment-processor.js |
+
+---
+
+### payment-processor.js
+**Size:** 3210 bytes | **Category:** Closing
+
+**Purpose:** Stripe integration for invoice generation, payment collection, and subscription management. Handles one-time payments and recurring billing. Webhook listeners for payment success/failure events. Auto-updates deal status on payment confirmation.
+
+| Field | Details |
+|-------|---------|
+| **Key Functions** | `createInvoice()`, `processPayment()`, `handleWebhook()`, `setupSubscription()` |
+| **Dependencies** | stripe, express; env STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET |
+| **Integration Points** | Triggered by contract-manager.js; updates crm.js and deal-tracker.js; feeds revenue-forecast.js |
+
+---
+
+### revenue-forecast.js
+**Size:** 4870 bytes | **Category:** Closing
+
+**Purpose:** Revenue forecasting engine using weighted pipeline analysis and historical conversion rates. Projects 30/60/90-day revenue with confidence intervals. Tracks forecast accuracy vs actuals. Monthly cohort analysis by niche and acquisition channel.
+
+| Field | Details |
+|-------|---------|
+| **Key Functions** | `generateForecast()`, `calcu
