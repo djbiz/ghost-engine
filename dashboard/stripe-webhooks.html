@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zo Webhook Monitor | Ghost Engine</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  background: #0a0a0a;
+  color: #e0e0e0;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+a { color: #00c853; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Header */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.25rem 2rem;
+  border-bottom: 1px solid #1e1e1e;
+  background: #0f0f0f;
+  flex-wrap: wrap; gap: 0.75rem;
+}
+.header-title {
+  font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em;
+}
+.header-title span { color: #00c853; }
+.header-controls { display: flex; align-items: center; gap: 1rem; }
+.refresh-toggle { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #999; }
+.refresh-toggle input[type="checkbox"] { accent-color: #00c853; }
+.refresh-toggle select {
+  background: #1a1a1a; color: #ccc; border: 1px solid #333; border-radius: 4px;
+  padding: 0.2rem 0.4rem; font-size: 0.8rem;
+}
+.connection-dot {
+  width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+  background: #00c853; margin-right: 0.35rem;
+}
+.connection-dot.disconnected { background: #ff1744; }
+
+/* Stats Row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+}
+.stat-card {
+  background: #141414; border: 1px solid #1e1e1e; border-radius: 8px;
+  padding: 1.1rem 1.25rem;
+}
+.stat-card .label { font-size: 0.75rem; color: #777; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem; }
+.stat-card .value { font-size: 1.6rem; font-weight: 700; color: #fff; }
+.stat-card .value.green { color: #00c853; }
+
+/* Filter Panels */
+.filters-section { padding: 0 2rem 1rem 2rem; }
+.filters-label { font-size: 0.8rem; color: #666; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.filter-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.filter-chip {
+  background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 6px;
+  padding: 0.35rem 0.85rem; font-size: 0.8rem; color: #aaa; cursor: pointer;
+  transition: all 0.15s ease;
+}
+.filter-chip:hover { border-color: #00c853; color: #ccc; }
+.filter-chip.active { background: #00c85315; border-color: #00c853; color: #00c853; }
+
+/* Event Log Table */
+.table-section { padding: 0.5rem 2rem 2rem 2rem; overflow-x: auto; }
+.table-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+.table-title { font-size: 1rem; font-weight: 600; }
+.event-count-badge {
+  background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px;
+  padding: 0.15rem 0.65rem; font-size: 0.75rem; color: #888;
+}
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  text-align: left; font-size: 0.7rem; color: #555; text-transform: uppercase;
+  letter-spacing: 0.06em; padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #1e1e1e; white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid #131313; transition: background 0.1s; }
+tbody tr:hover { background: #151515; }
+tbody td { padding: 0.65rem 0.75rem; font-size: 0.85rem; white-space: nowrap; }
+.status-dot {
+  width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 0.4rem;
+}
+.status-dot.green { background: #00c853; }
+.status-dot.yellow { background: #ffd600; }
+.status-dot.red { background: #ff1744; }
+.event-type-badge {
+  background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 4px;
+  padding: 0.15rem 0.55rem; font-size: 0.78rem; font-family: monospace;
+}
+.amount-cell { font-family: monospace; font-weight: 600; }
+.amount-cell.positive { color: #00c853; }
+.amount-cell.negative { color: #ff1744; }
+.details-btn {
+  background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 4px;
+  padding: 0.2rem 0.6rem; font-size: 0.75rem; color: #888; cursor: pointer;
+}
+.details-btn:hover { border-color: #00c853; color: #ccc; }
+.empty-state { text-align: center; padding: 3rem 1rem; color: #444; font-size: 0.9rem; }
+
+/* Footer */
+.footer {
+  text-align: center; padding: 1.5rem 2rem;
+  border-top: 1px solid #1e1e1e; font-size: 0.75rem; color: #444;
+}
+.footer span { color: #00c853; }
+
+/* Modal */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  z-index: 100; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: #141414; border: 1px solid #2a2a2a; border-radius: 10px;
+  padding: 1.5rem; max-width: 560px; width: 90%; max-height: 80vh; overflow-y: auto;
+}
+.modal h3 { font-size: 1rem; margin-bottom: 1rem; color: #fff; }
+.modal pre {
+  background: #0a0a0a; border: 1px solid #1e1e1e; border-radius: 6px;
+  padding: 1rem; font-size: 0.78rem; overflow-x: auto; color: #aaa;
+  line-height: 1.6;
+}
+.modal-close {
+  margin-top: 1rem; background: #1a1a1a; border: 1px solid #333; border-radius: 6px;
+  padding: 0.4rem 1.2rem; color: #ccc; cursor: pointer; font-size: 0.85rem;
+}
+.modal-close:hover { border-color: #00c853; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header { padding: 1rem; }
+  .stats-row { padding: 1rem; gap: 0.75rem; }
+  .filters-section, .table-section { padding-left: 1rem; padding-right: 1rem; }
+  .stat-card .value { font-size: 1.3rem; }
+  tbody td, thead th { padding: 0.5rem 0.4rem; font-size: 0.78rem; }
+}
+@media (max-width: 480px) {
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .header-title { font-size: 1.1rem; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-title"><span>Zo</span> Webhook Monitor</div>
+  <div class="header-controls">
+    <div class="refresh-toggle">
+      <span class="connection-dot" id="connDot"></span>
+      <label><input type="checkbox" id="autoRefreshToggle" checked> Auto-refresh</label>
+      <select id="refreshInterval">
+        <option value="10">10s</option>
+        <option value="30" selected>30s</option>
+        <option value="60">60s</option>
+        <option value="120">120s</option>
+      </select>
+    </div>
+  </div>
+</header>
+
+<section class="stats-row">
+  <div class="stat-card">
+    <div class="label">Total Events</div>
+    <div class="value" id="statTotal">--</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Successful Payments</div>
+    <div class="value green" id="statPayments">--</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Active Subscriptions</div>
+    <div class="value" id="statSubs">--</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Revenue Tracked</div>
+    <div class="value green" id="statRevenue">--</div>
+  </div>
+</section>
+
+<section class="filters-section">
+  <div class="filters-label">Filter by Event Type</div>
+  <div class="filter-chips" id="filterChips">
+    <div class="filter-chip active" data-type="all">All Events</div>
+    <div class="filter-chip" data-type="checkout.session.completed">checkout.session.completed</div>
+    <div class="filter-chip" data-type="payment_intent.succeeded">payment_intent.succeeded</div>
+    <div class="filter-chip" data-type="payment_intent.payment_failed">payment_intent.payment_failed</div>
+    <div class="filter-chip" data-type="customer.subscription.created">customer.subscription.created</div>
+    <div class="filter-chip" data-type="invoice.paid">invoice.paid</div>
+    <div class="filter-chip" data-type="charge.refunded">charge.refunded</div>
+  </div>
+</section>
+
+<section class="table-section">
+  <div class="table-header-row">
+    <div class="table-title">Event Log</div>
+    <div class="event-count-badge" id="eventCountBadge">0 events</div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Timestamp</th>
+        <th>Event Type</th>
+        <th>Status</th>
+        <th>Amount</th>
+        <th>Customer</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody id="eventTableBody">
+      <tr><td colspan="6" class="empty-state">Loading events...</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Event Details</h3>
+    <pre id="modalBody"></pre>
+    <button class="modal-close" id="modalClose">Close</button>
+  </div>
+</div>
+
+<footer class="footer">
+  Ghost Engine | <span>Zo Webhook Monitor</span> | LEG-39
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  /* -- Configuration -- */
+  var API_BASE_URL = 'http://localhost:3000';
+  var activeFilter = 'all';
+  var refreshTimer = null;
+  var liveMode = false;
+
+  /* -- Demo / Mock Data -- */
+  var demoEvents = [
+    { id: 'evt_demo_001', type: 'checkout.session.completed', status: 'succeeded', amount: 4999, currency: 'usd', customer_email: 'alice@example.com', product: 'Ghost Engine Pro', created: Math.floor(Date.now()/1000) - 120, raw: { id: 'evt_demo_001', type: 'checkout.session.completed', data: { object: { amount_total: 4999, currency: 'usd', customer_details: { email: 'alice@example.com' } } } } },
+    { id: 'evt_demo_002', type: 'payment_intent.succeeded', status: 'succeeded', amount: 2999, currency: 'usd', customer_email: 'bob@ghostengine.io', product: 'Starter Plan', created: Math.floor(Date.now()/1000) - 300, raw: { id: 'evt_demo_002', type: 'payment_intent.succeeded', data: { object: { amount: 2999, currency: 'usd', receipt_email: 'bob@ghostengine.io' } } } },
+    { id: 'evt_demo_003', type: 'customer.subscription.created', status: 'active', amount: 9900, currency: 'usd', customer_email: 'carol@startup.co', product: 'Team Plan (monthly)', created: Math.floor(Date.now()/1000) - 600, raw: { id: 'evt_demo_003', type: 'customer.subscription.created', data: { object: { status: 'active', plan: { amount: 9900, currency: 'usd', nickname: 'Team Plan (monthly)' } } } } },
+    { id: 'evt_demo_004', type: 'invoice.paid', status: 'succeeded', amount: 9900, currency: 'usd', customer_email: 'carol@startup.co', product: 'Team Plan (monthly)', created: Math.floor(Date.now()/1000) - 900, raw: { id: 'evt_demo_004', type: 'invoice.paid', data: { object: { amount_paid: 9900, currency: 'usd', customer_email: 'carol@startup.co' } } } },
+    { id: 'evt_demo_005', type: 'payment_intent.payment_failed', status: 'failed', amount: 1500, currency: 'usd', customer_email: 'dave@test.com', product: 'Basic Plan', created: Math.floor(Date.now()/1000) - 1200, raw: { id: 'evt_demo_005', type: 'payment_intent.payment_failed', data: { object: { amount: 1500, currency: 'usd', last_payment_error: { message: 'Your card was declined.' } } } } },
+    { id: 'evt_demo_006', type: 'charge.refunded', status: 'refunded', amount: 2999, currency: 'usd', customer_email: 'eve@domain.org', product: 'Starter Plan', created: Math.floor(Date.now()/1000) - 1800, raw: { id: 'evt_demo_006', type: 'charge.refunded', data: { object: { amount_refunded: 2999, currency: 'usd', billing_details: { email: 'eve@domain.org' } } } } },
+    { id: 'evt_demo_007', type: 'payment_intent.succeeded', status: 'succeeded', amount: 19900, currency: 'usd', customer_email: 'frank@enterprise.io', product: 'Enterprise Annual', created: Math.floor(Date.now()/1000) - 2400, raw: { id: 'evt_demo_007', type: 'payment_intent.succeeded', data: { object: { amount: 19900, currency: 'usd', receipt_email: 'frank@enterprise.io' } } } },
+    { id: 'evt_demo_008', type: 'checkout.session.completed', status: 'succeeded', amount: 5999, currency: 'usd', customer_email: 'grace@lab.dev', product: 'Ghost Engine Plus', created: Math.floor(Date.now()/1000) - 3600, raw: { id: 'evt_demo_008', type: 'checkout.session.completed', data: { object: { amount_total: 5999, currency: 'usd', customer_details: { email: 'grace@lab.dev' } } } } }
+  ];
+
+  var demoStats = {
+    totalEvents: demoEvents.length,
+    successfulPayments: 5,
+    activeSubscriptions: 1,
+    totalRevenue: 76696
+  };
+
+  var currentEvents = demoEvents.slice();
+  var currentStats = Object.assign({}, demoStats);
+
+  /* -- DOM References -- */
+  var $body = document.getElementById('eventTableBody');
+  var $total = document.getElementById('statTotal');
+  var $payments = document.getElementById('statPayments');
+  var $subs = document.getElementById('statSubs');
+  var $revenue = document.getElementById('statRevenue');
+  var $badge = document.getElementById('eventCountBadge');
+  var $connDot = document.getElementById('connDot');
+  var $autoToggle = document.getElementById('autoRefreshToggle');
+  var $intervalSel = document.getElementById('refreshInterval');
+  var $modal = document.getElementById('modalOverlay');
+  var $modalTitle = document.getElementById('modalTitle');
+  var $modalBody = document.getElementById('modalBody');
+  var $modalClose = document.getElementById('modalClose');
+
+  /* -- Helpers -- */
+  function formatCurrency(cents, currency) {
+    var sym = (currency || 'usd').toUpperCase() === 'USD' ? '$' : currency.toUpperCase() + ' ';
+    return sym + (cents / 100).toFixed(2);
+  }
+
+  function formatTime(ts) {
+    var d = new Date(ts * 1000);
+    return d.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+  }
+
+  function statusDotClass(status) {
+    if (status === 'succeeded' || status === 'active' || status === 'paid') return 'green';
+    if (status === 'pending' || status === 'trialing' || status === 'processing') return 'yellow';
+    return 'red';
+  }
+
+  function amountClass(type) {
+    if (type === 'charge.refunded' || type.includes('failed')) return 'negative';
+    return 'positive';
+  }
+
+  /* -- Rendering -- */
+  function renderStats(stats) {
+    $total.textContent = stats.totalEvents.toLocaleString();
+    $payments.textContent = stats.successfulPayments.toLocaleString();
+    $subs.textContent = stats.activeSubscriptions.toLocaleString();
+    $revenue.textContent = formatCurrency(stats.totalRevenue, 'usd');
+  }
+
+  function renderEvents(events) {
+    var filtered = (activeFilter === 'all') ? events : events.filter(function(e) { return e.type === activeFilter; });
+    $badge.textContent = filtered.length + ' event' + (filtered.length !== 1 ? 's' : '');
+    if (filtered.length === 0) {
+      $body.innerHTML = '<tr><td colspan="6" class="empty-state">No events match the current filter.</td></tr>';
+      return;
+    }
+    var html = '';
+    filtered.forEach(function(ev, idx) {
+      html += '<tr>' +
+        '<td>' + formatTime(ev.created) + '</td>' +
+        '<td><span class="event-type-badge">' + ev.type + '</span></td>' +
+        '<td><span class="status-dot ' + statusDotClass(ev.status) + '"></span>' + ev.status + '</td>' +
+        '<td class="amount-cell ' + amountClass(ev.type) + '">' + (ev.type === 'charge.refunded' ? '-' : '') + formatCurrency(ev.amount, ev.currency) + '</td>' +
+        '<td>' + (ev.customer_email || '--') + '</td>' +
+        '<td><button class="details-btn" data-idx="' + idx + '">View</button></td>' +
+        '</tr>';
+    });
+    $body.innerHTML = html;
+    var btns = $body.querySelectorAll('.details-btn');
+    btns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var i = parseInt(this.getAttribute('data-idx'), 10);
+        var ev = filtered[i];
+        $modalTitle.textContent = ev.type + '  (' + ev.id + ')';
+        $modalBody.textContent = JSON.stringify(ev.raw || ev, null, 2);
+        $modal.classList.add('open');
+      });
+    });
+  }
+
+  function renderAll() {
+    renderStats(currentStats);
+    renderEvents(currentEvents);
+  }
+
+  /* -- API Fetch -- */
+  function fetchLive() {
+    var typeParam = activeFilter !== 'all' ? '&type=' + encodeURIComponent(activeFilter) : '';
+    Promise.all([
+      fetch(API_BASE_URL + '/api/events?limit=200' + typeParam).then(function(r) { return r.json(); }),
+      fetch(API_BASE_URL + '/api/stats').then(function(r) { return r.json(); })
+    ]).then(function(results) {
+      currentEvents = results[0].events || results[0];
+      currentStats = results[1];
+      liveMode = true;
+      $connDot.classList.remove('disconnected');
+      renderAll();
+    }).catch(function() {
+      if (!liveMode) {
+        $connDot.classList.add('disconnected');
+        renderAll();
+      }
+    });
+  }
+
+  /* -- Filters -- */
+  document.getElementById('filterChips').addEventListener('click', function(e) {
+    var chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+    document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
+    chip.classList.add('active');
+    activeFilter = chip.getAttribute('data-type');
+    if (liveMode) { fetchLive(); } else { renderAll(); }
+  });
+
+  /* -- Auto Refresh -- */
+  function startRefresh() {
+    stopRefresh();
+    var sec = parseInt($intervalSel.value, 10) * 1000;
+    refreshTimer = setInterval(fetchLive, sec);
+  }
+  function stopRefresh() { if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; } }
+
+  $autoToggle.addEventListener('change', function() {
+    if (this.checked) { startRefresh(); } else { stopRefresh(); }
+  });
+  $intervalSel.addEventListener('change', function() {
+    if ($autoToggle.checked) startRefresh();
+  });
+
+  /* -- Modal -- */
+  $modalClose.addEventListener('click', function() { $modal.classList.remove('open'); });
+  $modal.addEventListener('click', function(e) { if (e.target === $modal) $modal.classList.remove('open'); });
+
+  /* -- Init -- */
+  renderAll();
+  fetchLive();
+  if ($autoToggle.checked) startRefresh();
+
+})();
+</script>
+</body>
+</html>
