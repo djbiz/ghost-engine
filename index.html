@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Ghost Engine — AI-Powered Revenue System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ────────────────────────────────────────────
+   TOKENS & RESET
+──────────────────────────────────────────── */
+:root{
+  --bg:#050505;
+  --card:#0f0f0f;
+  --card2:#141414;
+  --accent:#c8f135;
+  --accent-dim:rgba(200,241,53,.12);
+  --accent-glow:rgba(200,241,53,.22);
+  --text:#f0f0f0;
+  --muted:#555;
+  --muted2:#888;
+  --red:#ff3b30;
+  --border:#1e1e1e;
+  --border2:#2a2a2a;
+  --display:'Bebas Neue',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--mono);
+  font-weight:400;
+  font-size:.875rem;
+  line-height:1.75;
+  overflow-x:hidden;
+}
+
+/* noise grain */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:.022;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ────────────────────────────────────────────
+   TYPOGRAPHY UTILITIES
+──────────────────────────────────────────── */
+.display{font-family:var(--display);letter-spacing:.04em;text-transform:uppercase;line-height:.95}
+.mono{font-family:var(--mono)}
+
+/* ────────────────────────────────────────────
+   ANIMATIONS
+──────────────────────────────────────────── */
+@keyframes scanline{
+  0%{transform:translateY(-100%)}
+  100%{transform:translateY(200%)}
+}
+@keyframes glitch-1{
+  0%{clip-path:inset(40% 0 61% 0);transform:translate(-3px,0)}
+  10%{clip-path:inset(92% 0 1% 0);transform:translate(3px,0)}
+  20%{clip-path:inset(43% 0 1% 0);transform:translate(-3px,0)}
+  30%{clip-path:inset(25% 0 58% 0);transform:translate(0)}
+  40%{clip-path:inset(54% 0 7% 0);transform:translate(2px,0)}
+  50%{clip-path:inset(73% 0 3% 0);transform:translate(0)}
+  60%{clip-path:inset(17% 0 73% 0);transform:translate(-2px,0)}
+  70%{clip-path:inset(81% 0 2% 0);transform:translate(3px,0)}
+  80%{clip-path:inset(12% 0 81% 0);transform:translate(-2px,0)}
+  90%{clip-path:inset(66% 0 20% 0);transform:translate(0)}
+  100%{clip-path:inset(40% 0 61% 0);transform:translate(-3px,0)}
+}
+@keyframes glitch-2{
+  0%{clip-path:inset(55% 0 28% 0);transform:translate(3px,0);color:var(--red)}
+  25%{clip-path:inset(12% 0 78% 0);transform:translate(-2px,0);color:var(--accent)}
+  50%{clip-path:inset(68% 0 12% 0);transform:translate(2px,0);color:var(--red)}
+  75%{clip-path:inset(28% 0 55% 0);transform:translate(-3px,0);color:var(--accent)}
+  100%{clip-path:inset(55% 0 28% 0);transform:translate(3px,0);color:var(--red)}
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes pulse-ring{
+  0%{box-shadow:0 0 0 0 rgba(200,241,53,.45)}
+  70%{box-shadow:0 0 0 10px rgba(200,241,53,0)}
+  100%{box-shadow:0 0 0 0 rgba(200,241,53,0)}
+}
+@keyframes live-dot{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.6;transform:scale(1.4)}
+}
+@keyframes ticker-scroll{
+  0%{transform:translateX(0)}
+  100%{transform:translateX(-50%)}
+}
+@keyframes float-in{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes dash-update{
+  0%{opacity:.4}
+  50%{opacity:1}
+  100%{opacity:.4}
+}
+
+/* fade-up reveal */
+.reveal{
+  opacity:0;
+  transform:translateY(28px);
+  transition:opacity .65s ease,transform .65s ease;
+}
+.reveal.in{opacity:1;transform:none}
+
+/* ────────────────────────────────────────────
+   NAV
+──────────────────────────────────────────── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:900;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2rem;height:62px;
+  background:rgba(5,5,5,.92);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{
+  font-family:var(--display);
+  font-size:1.45rem;letter-spacing:.1em;
+  color:var(--text);text-decoration:none;
+  display:flex;align-items:center;gap:.45rem;
+}
+.nav-logo .dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--accent);
+  animation:live-dot 2s infinite;
+  flex-shrink:0;
+}
+.nav-links{
+  display:flex;align-items:center;gap:1.8rem;list-style:none;
+}
+.nav-links a{
+  color:var(--muted2);text-decoration:none;
+  font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;
+  transition:color .2s;
+}
+.nav-links a:hover{color:var(--accent)}
+.nav-btn{
+  background:var(--accent);color:#000 !important;
+  padding:.4rem 1.1rem;border-radius:2px;
+  font-weight:500;font-size:.7rem;letter-spacing:.14em;
+  transition:background .2s,transform .15s !important;
+}
+.nav-btn:hover{background:#d4ff3d !important;transform:translateY(-1px)}
+.hamburger{
+  display:none;flex-direction:column;gap:5px;
+  cursor:pointer;padding:6px;background:none;border:none;
+}
+.hamburger span{
+  display:block;width:22px;height:1.5px;
+  background:var(--text);transition:.3s;
+}
+
+/* ────────────────────────────────────────────
+   SECTION WRAPPERS
+──────────────────────────────────────────── */
+.wrap{max-width:1100px;margin:0 auto;padding:0 2rem;position:relative;z-index:1}
+.section{padding:96px 0;position:relative;z-index:1}
+.section-alt{background:var(--card);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.eyebrow{
+  font-size:.64rem;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:.8rem;
+  display:flex;align-items:center;gap:.7rem;
+}
+.eyebrow::after{content:'';flex:1;height:1px;background:var(--border2)}
+.sec-title{
+  font-family:var(--display);
+  font-size:clamp(2.2rem,5.5vw,4.2rem);
+  line-height:.97;letter-spacing:.04em;
+  text-transform:uppercase;margin-bottom:1.4rem;
+}
+.sec-sub{
+  font-size:.92rem;color:var(--muted2);
+  max-width:600px;line-height:1.85;margin-bottom:2.4rem;
+}
+
+/* ────────────────────────────────────────────
+   HERO
+──────────────────────────────────────────── */
+.hero{
+  position:relative;min-height:100vh;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:110px 2rem 80px;overflow:hidden;
+}
+/* grid bg */
+.hero-grid{
+  position:absolute;inset:0;z-index:0;
+  background-image:
+    linear-gradient(rgba(200,241,53,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(200,241,53,.035) 1px,transparent 1px);
+  background-size:52px 52px;
+  mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,black 35%,transparent 100%);
+}
+/* scanline */
+.hero::after{
+  content:'';position:absolute;
+  top:0;left:0;right:0;
+  height:160px;z-index:1;pointer-events:none;
+  background:linear-gradient(to bottom,transparent,rgba(200,241,53,.025),transparent);
+  animation:scanline 7s linear infinite;
+}
+.hero-content{position:relative;z-index:2;max-width:920px}
+
+.hero-eyebrow{
+  font-size:.66rem;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:1.3rem;
+  display:flex;align-items:center;gap:.6rem;
+}
+.hero-eyebrow::before{content:'';width:28px;height:1px;background:var(--accent)}
+
+.hero-headline{
+  font-family:var(--display);
+  font-size:clamp(3.6rem,11vw,9rem);
+  line-height:.92;letter-spacing:.03em;text-transform:uppercase;
+  margin-bottom:1.6rem;
+}
+.hero-headline .line2{color:var(--accent)}
+
+/* glitch word */
+.glitch{
+  position:relative;display:inline-block;
+}
+.glitch::before,.glitch::after{
+  content:attr(data-g);
+  position:absolute;top:0;left:0;width:100%;
+  pointer-events:none;
+}
+.glitch::before{
+  color:var(--red);z-index:-1;
+  animation:glitch-1 3.8s infinite linear;
+}
+.glitch::after{
+  z-index:-2;
+  animation:glitch-2 4.3s infinite linear alternate-reverse;
+}
+
+.hero-sub{
+  font-size:clamp(.88rem,1.8vw,1.05rem);
+  color:#aaa;max-width:560px;line-height:1.8;
+  margin-bottom:2rem;
+}
+.hero-bullets{
+  list-style:none;margin-bottom:2.4rem;
+  display:flex;flex-direction:column;gap:.5rem;
+}
+.hero-bullets li{
+  font-size:.82rem;color:var(--muted2);
+  display:flex;align-items:flex-start;gap:.6rem;
+}
+.hero-bullets li::before{
+  content:'▸';color:var(--accent);margin-top:.05em;flex-shrink:0;
+}
+.hero-ctas{display:flex;flex-direction:column;gap:.9rem;margin-bottom:3rem;align-items:flex-start}
+.btn{
+  display:inline-flex;align-items:center;gap:.5rem;
+  font-family:var(--mono);font-weight:500;
+  font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;
+  padding:.88rem 2rem;border-radius:2px;
+  text-decoration:none;border:none;cursor:pointer;
+  transition:all .2s;
+}
+.btn-solid{
+  background:var(--accent);color:#000;
+  animation:pulse-ring 2.8s infinite;
+}
+.btn-solid:hover{background:#d4ff3d;transform:translateY(-2px);box-shadow:0 8px 28px rgba(200,241,53,.28)}
+.btn-outline{
+  background:transparent;color:var(--text);
+  border:1px solid var(--border2);
+}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-2px)}
+.hero-scroll-link{
+  font-size:.75rem;color:var(--muted);
+  text-decoration:none;letter-spacing:.1em;
+  transition:color .2s;
+}
+.hero-scroll-link:hover{color:var(--accent)}
+
+/* stats bar */
+.stats-bar{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:1px;background:var(--border);
+  border:1px solid var(--border);
+  border-radius:2px;overflow:hidden;
+}
+.stat{background:var(--card);padding:1.1rem 1.2rem;text-align:center}
+.stat-num{
+  font-family:var(--display);font-size:2.2rem;
+  color:var(--accent);line-height:1;margin-bottom:.25rem;
+}
+.stat-label{
+  font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);
+}
+
+/* ────────────────────────────────────────────
+   TICKER
+──────────────────────────────────────────── */
+.ticker-wrap{
+  overflow:hidden;background:var(--card);
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  padding:.42rem 0;
+}
+.ticker{display:flex;white-space:nowrap;animation:ticker-scroll 30s linear infinite}
+.ticker-item{
+  font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--muted);padding:0 2.5rem;
+}
+.ticker-item .hi{color:var(--accent)}
+
+/* ────────────────────────────────────────────
+   2 AM PROBLEM SECTION
+──────────────────────────────────────────── */
+.story-block{
+  font-size:.95rem;color:var(--muted2);line-height:2;
+  margin-bottom:2rem;
+}
+.story-block strong{color:var(--text)}
+.callout{
+  border-left:3px solid var(--accent);
+  background:rgba(200,241,53,.05);
+  padding:1.1rem 1.6rem;
+  margin-bottom:2.5rem;
+  font-size:.9rem;color:var(--text);
+  border-radius:0 2px 2px 0;
+  font-style:italic;
+}
+.problem-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1px;background:var(--border);
+  border:1px solid var(--border);
+}
+.problem-card{
+  background:var(--card2);padding:2.2rem;
+  position:relative;overflow:hidden;transition:background .3s;
+}
+.problem-card::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:2px;
+  background:var(--red);
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .4s;
+}
+.problem-card:hover::before{transform:scaleX(1)}
+.problem-card:hover{background:#181818}
+.prob-num{
+  font-family:var(--display);font-size:3.5rem;
+  color:var(--border2);line-height:1;margin-bottom:.9rem;
+  transition:color .3s;
+}
+.problem-card:hover .prob-num{color:rgba(255,59,48,.18)}
+.prob-title{
+  font-family:var(--display);font-size:1.5rem;
+  letter-spacing:.05em;text-transform:uppercase;
+  color:var(--red);margin-bottom:.7rem;
+}
+.prob-text{font-size:.8rem;color:#777;line-height:1.85}
+
+/* ────────────────────────────────────────────
+   WHAT GHOST ENGINE DOES
+──────────────────────────────────────────── */
+.steps-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1.4rem;margin-top:2.4rem;
+}
+.step-card{
+  background:var(--card2);border:1px solid var(--border);
+  padding:2rem;border-radius:3px;position:relative;
+  transition:border-color .3s,transform .25s;
+}
+.step-card:hover{border-color:var(--accent);transform:translateY(-4px)}
+.step-icon{
+  font-size:1.6rem;margin-bottom:1rem;
+  width:48px;height:48px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--accent-dim);border-radius:4px;
+}
+.step-num{
+  font-family:var(--display);font-size:.75rem;
+  letter-spacing:.22em;color:var(--accent);margin-bottom:.5rem;
+}
+.step-title{
+  font-family:var(--display);font-size:1.4rem;
+  letter-spacing:.05em;text-transform:uppercase;margin-bottom:.7rem;
+}
+.step-text{font-size:.8rem;color:var(--muted2);line-height:1.85}
+.signal-line{
+  text-align:center;font-size:.8rem;color:var(--muted2);
+  margin-top:2.5rem;letter-spacing:.12em;
+}
+.signal-line em{color:var(--accent);font-style:normal}
+
+/* ────────────────────────────────────────────
+   LIVE DASHBOARD
+──────────────────────────────────────────── */
+.dashboard-wrap{
+  margin-top:2.4rem;
+  background:var(--card);
+  border:1px solid var(--border);border-radius:4px;
+  overflow:hidden;
+}
+.dash-bar{
+  background:var(--card2);
+  border-bottom:1px solid var(--border);
+  padding:.85rem 1.4rem;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.dash-dots{display:flex;gap:6px;align-items:center}
+.dd{width:10px;height:10px;border-radius:50%}
+.dd-r{background:#ff5f57}.dd-y{background:#ffbd2e}.dd-g{background:#28ca41}
+.dash-label{
+  font-size:.62rem;letter-spacing:.18em;color:var(--muted);
+  display:flex;align-items:center;gap:.5rem;
+}
+.live-indicator{
+  display:flex;align-items:center;gap:.4rem;
+  font-size:.6rem;letter-spacing:.18em;color:var(--accent);
+}
+.live-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--accent);
+  animation:live-dot 1.4s infinite;
+}
+.dash-body{padding:1.6rem 1.4rem;display:flex;flex-direction:column;gap:.85rem}
+.dash-row{
+  display:flex;align-items:center;gap:1rem;
+  padding:.9rem 1.1rem;
+  border:1px solid var(--border);border-radius:3px;
+  background:var(--card2);
+  transition:background .3s;
+}
+.dash-row:hover{background:#161616}
+.dash-status{
+  width:9px;height:9px;border-radius:50%;flex-shrink:0;
+}
+.ds-green{background:#28ca41;box-shadow:0 0 6px rgba(40,202,65,.5)}
+.ds-yellow{background:#ffbd2e;box-shadow:0 0 6px rgba(255,189,46,.4)}
+.ds-gray{background:var(--border2)}
+.dash-main{flex:1}
+.dash-metric{
+  font-family:var(--display);font-size:1.05rem;
+  letter-spacing:.06em;margin-bottom:.1rem;
+}
+.dash-detail{font-size:.67rem;color:var(--muted);letter-spacing:.1em}
+.dash-val{
+  font-family:var(--display);font-size:1.2rem;
+  color:var(--accent);
+  animation:dash-update 3s infinite;
+}
+.dash-caption{
+  font-size:.72rem;color:var(--muted);
+  text-align:center;padding:.9rem;
+  border-top:1px solid var(--border);
+  letter-spacing:.08em;
+}
+.dash-caption em{color:var(--accent);font-style:normal}
+.cursor-blink{
+  display:inline-block;width:7px;height:12px;
+  background:var(--accent);vertical-align:middle;
+  animation:blink .9s infinite;margin-left:4px;
+}
+
+/* ────────────────────────────────────────────
+   SELF-ASSESSMENT
+──────────────────────────────────────────── */
+.assess-grid{
+  display:flex;flex-direction:column;gap:.8rem;
+  margin:2rem 0;max-width:680px;
+}
+.assess-item{
+  display:flex;align-items:flex-start;gap:1rem;
+  padding:1rem 1.3rem;
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:3px;cursor:pointer;
+  transition:border-color .25s,background .25s;
+  user-select:none;
+}
+.assess-item.checked{
+  border-color:var(--accent);
+  background:rgba(200,241,53,.05);
+}
+.assess-check{
+  width:20px;height:20px;border-radius:2px;
+  border:1.5px solid var(--border2);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  margin-top:.1rem;transition:all .2s;
+}
+.assess-item.checked .assess-check{
+  border-color:var(--accent);background:var(--accent);
+}
+.assess-item.checked .assess-check::after{
+  content:'✓';font-size:.65rem;color:#000;font-weight:700;
+}
+.assess-text{font-size:.83rem;color:var(--muted2);line-height:1.6;transition:color .2s}
+.assess-item.checked .assess-text{color:var(--text)}
+.assess-cta{margin-top:1.8rem}
+
+/* ────────────────────────────────────────────
+   AGENT MATRIX
+──────────────────────────────────────────── */
+.agent-table{
+  width:100%;border-collapse:collapse;
+  border:1px solid var(--border);margin-top:2.2rem;
+}
+.agent-table thead{background:var(--card2)}
+.agent-table th{
+  font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--accent);padding:.95rem 1.3rem;text-align:left;
+  border-bottom:1px solid var(--border);
+}
+.agent-table tbody tr{
+  border-bottom:1px solid var(--border);
+  transition:background .2s;
+}
+.agent-table tbody tr:hover{background:rgba(200,241,53,.05)}
+.agent-table tbody tr:hover td:first-child{color:var(--accent)}
+.agent-table td{
+  padding:.95rem 1.3rem;font-size:.78rem;color:#bbb;vertical-align:top;
+}
+.agent-table td:first-child{color:var(--text);font-weight:500;transition:color .2s}
+.agent-table td:nth-child(2){color:var(--accent);font-size:.7rem;white-space:nowrap}
+.agent-badge{
+  display:inline-block;
+  background:rgba(200,241,53,.1);
+  border:1px solid rgba(200,241,53,.2);
+  color:var(--accent);font-size:.58rem;
+  letter-spacing:.14em;padding:.15rem .5rem;
+  border-radius:2px;text-transform:uppercase;margin-left:.6rem;
+}
+
+/* ────────────────────────────────────────────
+   3-LAYER MEMORY
+──────────────────────────────────────────── */
+.memory-flow{
+  display:flex;align-items:stretch;gap:1px;
+  background:var(--border);border:1px solid var(--border);
+  margin:2.2rem 0 1.6rem;
+}
+.mem-node{
+  flex:1;background:var(--card2);padding:1.8rem;
+  position:relative;transition:background .3s;
+}
+.mem-node:hover{background:#1a1a1a}
+.mem-node::after{
+  content:'→';position:absolute;
+  right:-12px;top:50%;transform:translateY(-50%);
+  color:var(--accent);font-size:1rem;z-index:2;
+  background:var(--border);padding:0 1px;
+}
+.mem-node:last-child::after{display:none}
+.mem-file{
+  font-family:var(--display);font-size:1.3rem;
+  letter-spacing:.05em;color:var(--accent);margin-bottom:.3rem;
+}
+.mem-role{
+  font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:.7rem;
+}
+.mem-desc{font-size:.77rem;color:#777;line-height:1.75}
+.memory-note{
+  background:rgba(200,241,53,.05);
+  border:1px solid rgba(200,241,53,.15);
+  border-radius:2px;padding:1.2rem 1.6rem;
+  font-size:.82rem;color:var(--muted2);line-height:1.85;
+}
+.memory-note em{color:var(--accent);font-style:normal}
+
+/* ────────────────────────────────────────────
+   ROADMAP
+──────────────────────────────────────────── */
+.roadmap-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:1px;background:var(--border);
+  border:1px solid var(--border);margin-top:2.4rem;
+}
+.phase-card{
+  background:var(--card);padding:2rem 1.6rem;
+  position:relative;overflow:hidden;
+  transition:background .3s;
+}
+.phase-card:hover{background:#111}
+.phase-card::after{
+  content:'';position:absolute;
+  bottom:0;left:0;right:0;height:2px;
+  background:var(--accent);transform:scaleX(0);transform-origin:left;
+  transition:transform .4s;
+}
+.phase-card:hover::after{transform:scaleX(1)}
+.phase-ghost-num{
+  font-family:var(--display);font-size:6rem;
+  color:var(--border);line-height:1;
+  position:absolute;top:.5rem;right:.8rem;
+  transition:color .3s;
+}
+.phase-card:hover .phase-ghost-num{color:rgba(200,241,53,.06)}
+.phase-num{
+  font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:.7rem;
+}
+.phase-title{
+  font-family:var(--display);font-size:1.4rem;
+  letter-spacing:.05em;text-transform:uppercase;
+  margin-bottom:.7rem;position:relative;z-index:1;
+}
+.phase-week{
+  font-size:.66rem;color:var(--muted);
+  letter-spacing:.12em;margin-bottom:.7rem;
+}
+.phase-desc{font-size:.78rem;color:#777;line-height:1.85}
+.phase-goal{
+  margin-top:1rem;font-size:.68rem;
+  color:var(--accent);letter-spacing:.1em;
+}
+
+/* ────────────────────────────────────────────
+   WHY FUNNELS FAIL
+──────────────────────────────────────────── */
+.fail-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:1.2rem;margin-top:2rem;
+}
+.fail-card{
+  background:rgba(255,59,48,.05);
+  border:1px solid rgba(255,59,48,.18);
+  border-radius:3px;padding:1.6rem;
+  display:flex;align-items:flex-start;gap:1rem;
+  transition:border-color .3s;
+}
+.fail-card:hover{border-color:rgba(255,59,48,.4)}
+.fail-x{
+  color:var(--red);font-family:var(--display);
+  font-size:1.4rem;flex-shrink:0;line-height:1;margin-top:.1rem;
+}
+.fail-text{font-size:.82rem;color:#999;line-height:1.75}
+.fail-footer{
+  margin-top:1.8rem;font-size:.84rem;color:var(--muted2);
+  line-height:1.85;max-width:680px;
+}
+.fail-footer em{color:var(--accent);font-style:normal}
+
+/* ────────────────────────────────────────────
+   GUARANTEE
+──────────────────────────────────────────── */
+.guarantee-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:1.4rem;margin-top:2.4rem;
+}
+.guarantee-card{
+  border:1px solid rgba(200,241,53,.3);
+  background:rgba(200,241,53,.04);
+  border-radius:3px;padding:2.2rem;
+  display:flex;align-items:flex-start;gap:1.3rem;
+  transition:border-color .3s,transform .2s;
+}
+.guarantee-card:hover{
+  border-color:var(--accent);transform:translateY(-3px);
+}
+.g-icon{font-size:1.8rem;flex-shrink:0}
+.g-title{
+  font-family:var(--display);font-size:1.35rem;
+  letter-spacing:.05em;text-transform:uppercase;margin-bottom:.5rem;
+}
+.g-text{font-size:.8rem;color:var(--muted2);line-height:1.85}
+
+/* ────────────────────────────────────────────
+   PRICING
+──────────────────────────────────────────── */
+.pricing-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1.4rem;margin-top:2.4rem;align-items:start;
+}
+.pricing-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:4px;padding:2.2rem;
+  position:relative;overflow:hidden;
+  transition:transform .25s,box-shadow .25s,border-color .25s;
+}
+.pricing-card:hover{transform:translateY(-5px);box-shadow:0 16px 50px rgba(0,0,0,.5)}
+.pricing-card.feat{
+  border-color:var(--accent);background:#0c1100;
+  transform:translateY(-4px);
+  box-shadow:0 0 40px rgba(200,241,53,.1);
+}
+.pricing-card.feat:hover{
+  transform:translateY(-8px);
+  box-shadow:0 20px 60px rgba(200,241,53,.18);
+}
+.pricing-card.feat::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),rgba(200,241,53,.4));
+}
+.feat-badge{
+  position:absolute;top:1.1rem;right:1.1rem;
+  background:var(--accent);color:#000;
+  font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;
+  padding:.22rem .55rem;border-radius:2px;font-weight:500;
+}
+.price-tier{
+  font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:1rem;
+}
+.price-name{
+  font-family:var(--display);font-size:2rem;
+  letter-spacing:.04em;text-transform:uppercase;margin-bottom:.3rem;
+}
+.pricing-card.feat .price-name{color:var(--accent)}
+.price-amount{
+  font-family:var(--display);font-size:3.2rem;
+  line-height:1;margin-bottom:.25rem;
+}
+.price-amount sup{font-size:1.4rem;vertical-align:top;margin-top:.55rem}
+.pricing-card.feat .price-amount{color:var(--accent)}
+.price-tagline{font-size:.72rem;color:var(--muted);margin-bottom:1.6rem;line-height:1.6}
+.price-divider{height:1px;background:var(--border);margin-bottom:1.4rem}
+.price-features{list-style:none;margin-bottom:1.8rem}
+.price-features li{
+  font-size:.78rem;color:#aaa;padding:.35rem 0;
+  display:flex;align-items:flex-start;gap:.6rem;
+}
+.price-features li::before{
+  content:'//';color:var(--accent);font-size:.68rem;flex-shrink:0;
+}
+.price-btn{
+  display:block;width:100%;text-align:center;
+  padding:.85rem;border-radius:2px;
+  font-family:var(--mono);font-size:.74rem;
+  letter-spacing:.14em;text-transform:uppercase;
+  font-weight:500;text-decoration:none;
+  cursor:pointer;transition:all .2s;
+}
+.price-btn-outline{
+  border:1px solid var(--border2);color:var(--text);background:transparent;
+}
+.price-btn-outline:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+.price-btn-solid{
+  background:var(--accent);color:#000;border:none;
+}
+.price-btn-solid:hover{background:#d4ff3d;transform:translateY(-1px);box-shadow:0 6px 24px rgba(200,241,53,.25)}
+
+/* ────────────────────────────────────────────
+   ZO ENTITY SECTION
+──────────────────────────────────────────── */
+.zo-block{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:3.5rem;align-items:start;margin-top:2rem;
+}
+.zo-terminal{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:4px;overflow:hidden;
+  font-family:var(--mono);
+}
+.zo-term-bar{
+  background:var(--card2);border-bottom:1px solid var(--border);
+  padding:.75rem 1.1rem;display:flex;align-items:center;gap:6px;
+}
+.zo-term-bar .lbl{
+  font-size:.6rem;letter-spacing:.14em;color:var(--muted);margin-left:.5rem;
+}
+.zo-term-body{padding:1.4rem;font-size:.73rem;line-height:2.1}
+.tp{color:var(--accent);margin-right:.4rem}
+.tc{color:var(--text)}
+.to{color:var(--muted);padding-left:1rem;display:block}
+.zo-points{display:flex;flex-direction:column;gap:1.1rem}
+.zo-point{
+  display:flex;align-items:flex-start;gap:.9rem;
+  padding:1.1rem;background:var(--card2);
+  border:1px solid var(--border);border-radius:3px;
+  transition:border-color .25s;
+}
+.zo-point:hover{border-color:rgba(200,241,53,.25)}
+.zp-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--accent);margin-top:.35rem;flex-shrink:0;
+}
+.zp-text{font-size:.82rem;color:var(--muted2);line-height:1.75}
+.zp-text strong{color:var(--text)}
+
+/* ────────────────────────────────────────────
+   LESSONS LEARNED
+──────────────────────────────────────────── */
+.lessons-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:1.4rem;margin-top:2rem;
+}
+.lesson-card{
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:3px;padding:2rem;
+  transition:border-color .3s;
+}
+.lesson-card:hover{border-color:var(--border2)}
+.lesson-q{
+  font-family:var(--display);font-size:1.1rem;
+  letter-spacing:.04em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:.7rem;
+}
+.lesson-a{font-size:.8rem;color:var(--muted2);line-height:1.85}
+
+/* ────────────────────────────────────────────
+   FINAL CTA
+──────────────────────────────────────────── */
+.final-cta{
+  background:linear-gradient(to bottom,var(--bg),#080c00);
+  border-top:1px solid var(--border);text-align:center;
+}
+.final-headline{
+  font-family:var(--display);
+  font-size:clamp(2.4rem,6.5vw,5.5rem);
+  line-height:.95;letter-spacing:.04em;text-transform:uppercase;
+  margin-bottom:1.6rem;max-width:820px;margin-left:auto;margin-right:auto;
+}
+.final-headline em{color:var(--accent);font-style:normal}
+.final-sub{
+  font-size:.88rem;color:var(--muted2);line-height:1.9;
+  max-width:580px;margin:0 auto 2.6rem;
+}
+.final-ctas{
+  display:flex;flex-direction:column;
+  align-items:center;gap:1rem;
+}
+.final-link{
+  font-size:.75rem;color:var(--muted);
+  text-decoration:none;letter-spacing:.12em;
+  transition:color .2s;
+}
+.final-link:hover{color:var(--accent)}
+
+/* ────────────────────────────────────────────
+   FOOTER
+──────────────────────────────────────────── */
+footer{
+  border-top:1px solid var(--border);
+  background:var(--card);padding:3rem 2rem;
+}
+.footer-inner{
+  max-width:1100px;margin:0 auto;
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;gap:.9rem;
+}
+.footer-logo{
+  font-family:var(--display);font-size:1.9rem;
+  letter-spacing:.1em;color:var(--accent);
+}
+.footer-built{font-size:.72rem;color:var(--muted);letter-spacing:.14em}
+.footer-built em{color:var(--accent);font-style:normal}
+.footer-tag{font-size:.68rem;color:var(--muted);letter-spacing:.1em}
+.footer-links{display:flex;gap:1.8rem;margin-top:.3rem}
+.footer-links a{
+  font-size:.65rem;color:var(--muted);letter-spacing:.14em;
+  text-decoration:none;text-transform:uppercase;transition:color .2s;
+}
+.footer-links a:hover{color:var(--accent)}
+.footer-copy{font-size:.6rem;color:#2a2a2a;letter-spacing:.1em;text-transform:uppercase}
+
+/* ────────────────────────────────────────────
+   FLOATING CTA BUTTON
+──────────────────────────────────────────── */
+#float-cta{
+  position:fixed;bottom:1.5rem;right:1.5rem;z-index:800;
+  background:var(--accent);color:#000;
+  font-family:var(--mono);font-weight:500;
+  font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+  padding:.7rem 1.3rem;border-radius:2px;
+  text-decoration:none;
+  box-shadow:0 4px 20px rgba(200,241,53,.3);
+  opacity:0;transform:translateY(20px);
+  transition:opacity .4s,transform .4s,background .2s;
+  pointer-events:none;
+}
+#float-cta.visible{opacity:1;transform:translateY(0);pointer-events:auto}
+#float-cta:hover{background:#d4ff3d}
+
+/* ────────────────────────────────────────────
+   RESPONSIVE
+──────────────────────────────────────────── */
+@media(max-width:960px){
+  .stats-bar{grid-template-columns:repeat(2,1fr)}
+  .problem-grid{grid-template-columns:1fr}
+  .steps-grid{grid-template-columns:1fr}
+  .roadmap-grid{grid-template-columns:repeat(2,1fr)}
+  .pricing-grid{grid-template-columns:1fr;max-width:480px;margin-left:auto;margin-right:auto}
+  .pricing-card.feat{transform:none}
+  .zo-block{grid-template-columns:1fr}
+  .lessons-grid{grid-template-columns:1fr}
+  .guarantee-grid{grid-template-columns:1fr}
+  .fail-grid{grid-template-columns:1fr}
+  .nav-links{display:none}
+  .hamburger{display:flex}
+  .nav-links.open{
+    display:flex;flex-direction:column;
+    position:fixed;top:62px;left:0;right:0;
+    background:rgba(5,5,5,.98);
+    border-bottom:1px solid var(--border);
+    padding:1.4rem 2rem;gap:.9rem;
+  }
+  .memory-flow{flex-direction:column}
+  .mem-node::after{display:none}
+}
+@media(max-width:640px){
+  .roadmap-grid{grid-template-columns:1fr}
+  .hero{padding:90px 1.25rem 60px}
+  .wrap{padding:0 1.25rem}
+  nav{padding:0 1.25rem}
+  .hero-headline{font-size:clamp(3rem,16vw,5rem)}
+  .final-ctas .btn{width:100%;justify-content:center}
+  #float-cta{bottom:1rem;right:1rem;left:1rem;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ NAV ═══════════ -->
+<nav id="nav">
+  <a href="#" class="nav-logo">
+    <span class="dot"></span>GHOST ENGINE
+  </a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#system">System</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#pricing" class="nav-btn">Install Now</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger" aria-label="Menu" onclick="toggleNav()">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero" id="top">
+  <div class="hero-grid"></div>
+  <div class="wrap hero-content">
+    <p class="hero-eyebrow reveal">Ghost Engine · Zo · Autonomous Revenue Infrastructure</p>
+    <h1 class="hero-headline reveal" style="transition-delay:.08s">
+      YOUR FUNNEL DOESN'T<br>NEED MORE TRAFFIC.<br>
+      <span class="line2">IT NEEDS A <span class="glitch" data-g="NERVOUS">NERVOUS</span> SYSTEM.</span>
+    </h1>
+    <p class="hero-sub reveal" style="transition-delay:.16s">
+      Ghost Engine detects buyer intent, catches leads before they go cold,
+      and routes attention into revenue — even while you sleep.
+    </p>
+    <ul class="hero-bullets reveal" style="transition-delay:.22s">
+      <li>Catch high-intent leads the moment they show up</li>
+      <li>Turn silent interest into clear conversion paths</li>
+      <li>Install a live revenue system without adding more sales calls</li>
+    </ul>
+    <div class="hero-ctas reveal" style="transition-delay:.28s">
+      <a href="#pricing" class="btn btn-solid">⚡ Install Quick Flip — $297</a>
+      <a href="#system" class="hero-scroll-link">Or scroll to see how the Full Engine works ↓</a>
+    </div>
+    <div class="stats-bar reveal" style="transition-delay:.36s">
+      <div class="stat">
+        <div class="stat-num" data-target="24" data-suffix="HR">0</div>
+        <div class="stat-label">System Live</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" data-target="10" data-suffix="">0</div>
+        <div class="stat-label">Leads Guaranteed / 30 Days</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" data-target="49180" data-prefix="$" data-fmt="money">0</div>
+        <div class="stat-label">Month 4 Target</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" data-target="7" data-suffix="">0</div>
+        <div class="stat-label">Agents Running Daily</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Ticker -->
+<div class="ticker-wrap">
+  <div class="ticker">
+    <span class="ticker-item"><span class="hi">◆</span> Lead Hunter Active</span>
+    <span class="ticker-item"><span class="hi">◆</span> Closer Engine Running</span>
+    <span class="ticker-item"><span class="hi">◆</span> Signal Detected — 14 Intent Events</span>
+    <span class="ticker-item"><span class="hi">◆</span> CRM Updated</span>
+    <span class="ticker-item"><span class="hi">◆</span> Stripe Links Live</span>
+    <span class="ticker-item"><span class="hi">◆</span> Sunday Evolution Scheduled</span>
+    <span class="ticker-item"><span class="hi">◆</span> 7 Agents Online</span>
+    <span class="ticker-item"><span class="hi">◆</span> SOUL.md Loaded</span>
+    <span class="ticker-item"><span class="hi">◆</span> Ghost Engine Active</span>
+    <span class="ticker-item"><span class="hi">◆</span> Zo Monitoring</span>
+    <!-- duplicate -->
+    <span class="ticker-item"><span class="hi">◆</span> Lead Hunter Active</span>
+    <span class="ticker-item"><span class="hi">◆</span> Closer Engine Running</span>
+    <span class="ticker-item"><span class="hi">◆</span> Signal Detected — 14 Intent Events</span>
+    <span class="ticker-item"><span class="hi">◆</span> CRM Updated</span>
+    <span class="ticker-item"><span class="hi">◆</span> Stripe Links Live</span>
+    <span class="ticker-item"><span class="hi">◆</span> Sunday Evolution Scheduled</span>
+    <span class="ticker-item"><span class="hi">◆</span> 7 Agents Online</span>
+    <span class="ticker-item"><span class="hi">◆</span> SOUL.md Loaded</span>
+    <span class="ticker-item"><span class="hi">◆</span> Ghost Engine Active</span>
+    <span class="ticker-item"><span class="hi">◆</span> Zo Monitoring</span>
+  </div>
+</div>
+
+
+<!-- ═══════════ HERO VIDEO ═══════════ -->
+<section class="section" style="padding:0;background:#000;border-top:1px solid var(--border)">
+  <div class="wrap" style="max-width:900px;padding:60px 2rem">
+    <div class="eyebrow reveal" style="margin-bottom:1rem">System Demo</div>
+    <h2 class="sec-title reveal" style="font-size:clamp(1.8rem,4vw,3rem);margin-bottom:1.2rem">SEE THE ENGINE IN ACTION</h2>
+    <p style="font-size:.82rem;color:var(--muted2);margin-bottom:2rem" class="reveal">Ghost Engine running live — real-time lead detection, qualification, and revenue routing.</p>
+    <div class="reveal" style="
+      position:relative;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:4px;
+      overflow:hidden;
+    ">
+      <video 
+        controls 
+        preload="metadata"
+        poster=""
+        style="width:100%;display:block;max-height:540px;background:#000"
+      >
+        <source src="./The_Ghost_Engine.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ THE 2 AM PROBLEM ═══════════ -->
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="eyebrow reveal">Revenue Leakage</div>
+    <h2 class="sec-title reveal">THE RESPONSE GAP IS<br>KILLING YOUR REVENUE</h2>
+
+    <div class="story-block reveal">
+      <strong>Someone visits your page at 2:13 AM.</strong><br>
+      They read. They click. They hesitate. They leave.<br><br>
+      That is not a traffic problem.<br>
+      That is a response-and-monetization problem.
+    </div>
+
+    <div class="callout reveal">
+      "If demand depends on you manually noticing it, your funnel is leaking money."
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card reveal">
+        <div class="prob-num">01</div>
+        <div class="prob-title">The 2 AM Lead</div>
+        <p class="prob-text">High-intent buyer lands at off-hours. Gets silence. Urgency gone in minutes. Revenue evaporated. They were ready — the system wasn't.</p>
+      </div>
+      <div class="problem-card reveal" style="transition-delay:.1s">
+        <div class="prob-num">02</div>
+        <div class="prob-title">Operational Friction</div>
+        <p class="prob-text">Manual outreach is inconsistent, error-prone, impossible to scale. Every missed follow-up is money walking out the door. Human error is the leak in your funnel.</p>
+      </div>
+      <div class="problem-card reveal" style="transition-delay:.18s">
+        <div class="prob-num">03</div>
+        <div class="prob-title">Agency Latency</div>
+        <p class="prob-text">Traditional agencies take weeks to onboard. The window closes before they're ready. Momentum lost. Budget burned. The market moved on.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ WHAT GHOST ENGINE DOES ═══════════ -->
+<section class="section" id="system">
+  <div class="wrap">
+    <div class="eyebrow reveal">Core System Logic</div>
+    <h2 class="sec-title reveal">DETECT. SCORE.<br>ROUTE. MONETIZE.</h2>
+    <p class="sec-sub reveal">Ghost Engine is not a generic automation tool. It is the monetization layer behind your offers, attention, and follow-up.</p>
+
+    <div class="steps-grid">
+      <div class="step-card reveal">
+        <div class="step-icon">👁</div>
+        <div class="step-num">Step 01</div>
+        <div class="step-title">Detect Intent</div>
+        <p class="step-text">Ghost watches for behavior that signals buying interest: visits, clicks, replies, engagement patterns. It catches the signal you'd normally miss.</p>
+      </div>
+      <div class="step-card reveal" style="transition-delay:.1s">
+        <div class="step-icon">⚖️</div>
+        <div class="step-num">Step 02</div>
+        <div class="step-title">Score Opportunity</div>
+        <p class="step-text">It separates passive attention from real commercial intent. Stop treating every lead the same. Score. Prioritize. Act on what's real.</p>
+      </div>
+      <div class="step-card reveal" style="transition-delay:.2s">
+        <div class="step-icon">⚡</div>
+        <div class="step-num">Step 03</div>
+        <div class="step-title">Route to Revenue</div>
+        <p class="step-text">Moves people into the right path: direct purchase, Quick Flip entry, or Full Engine. No forced calls. No friction. Clear conversion architecture.</p>
+      </div>
+    </div>
+
+    <p class="signal-line reveal">More signal. Less guessing. <em>Faster monetization.</em></p>
+  </div>
+</section>
+
+<!-- ═══════════ LIVE DASHBOARD ═══════════ -->
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="eyebrow reveal">Real-Time Intelligence</div>
+    <h2 class="sec-title reveal">WHAT THE SYSTEM IS<br>DOING RIGHT NOW</h2>
+    <p class="sec-sub reveal">When Ghost Engine is installed, it acts like a live revenue nervous system. Here's what that looks like.</p>
+
+    <div class="dashboard-wrap reveal">
+      <div class="dash-bar">
+        <div class="dash-dots">
+          <div class="dd dd-r"></div>
+          <div class="dd dd-y"></div>
+          <div class="dd dd-g"></div>
+          <span class="dash-label" style="margin-left:.5rem">ghost-engine · zo-monitor · live session</span>
+        </div>
+        <div class="live-indicator">
+          <div class="live-dot"></div>
+          SYSTEM ACTIVE · ZO MONITORING
+        </div>
+      </div>
+      <div class="dash-body">
+        <div class="dash-row">
+          <div class="dash-status ds-green"></div>
+          <div class="dash-main">
+            <div class="dash-metric">🟢 Signal Detected</div>
+            <div class="dash-detail">NEW INTENT SIGNALS · LAST 24H</div>
+          </div>
+          <div class="dash-val" id="sig-count">14</div>
+        </div>
+        <div class="dash-row">
+          <div class="dash-status ds-yellow"></div>
+          <div class="dash-main">
+            <div class="dash-metric">🟡 Intent Rising</div>
+            <div class="dash-detail">PROFILES SHOWING BUYER BEHAVIOR</div>
+          </div>
+          <div class="dash-val" style="color:#ffbd2e">3</div>
+        </div>
+        <div class="dash-row">
+          <div class="dash-status ds-green"></div>
+          <div class="dash-main">
+            <div class="dash-metric">🟢 Qualified Buyer Path</div>
+            <div class="dash-detail">PROSPECTS ROUTED TO QUICK FLIP</div>
+          </div>
+          <div class="dash-val">2</div>
+        </div>
+        <div class="dash-row">
+          <div class="dash-status ds-green"></div>
+          <div class="dash-main">
+            <div class="dash-metric">🟢 Direct Purchase Available</div>
+            <div class="dash-detail">SKIP THE CALL · ACTIVE</div>
+          </div>
+          <div class="dash-val" style="font-size:.8rem">LIVE</div>
+        </div>
+        <div class="dash-row">
+          <div class="dash-status ds-gray"></div>
+          <div class="dash-main">
+            <div class="dash-metric" style="color:var(--muted2)">⚪ Manual Follow-Up</div>
+            <div class="dash-detail">STATUS</div>
+          </div>
+          <div class="dash-val" style="color:var(--muted);font-size:.78rem">OPTIONAL<span class="cursor-blink"></span></div>
+        </div>
+      </div>
+      <div class="dash-caption">
+        This is the difference between a page that "exists" and a system that <em>actively works.</em>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ SELF-ASSESSMENT ═══════════ -->
+<section class="section">
+  <div class="wrap">
+    <div class="eyebrow reveal">Fit Assessment</div>
+    <h2 class="sec-title reveal">SHOULD ZO FLAG YOU?</h2>
+    <p class="sec-sub reveal">Quick self-assessment — if these are true, Ghost Engine is probably for you:</p>
+
+    <div class="assess-grid" id="assessGrid">
+      <div class="assess-item" onclick="toggleAssess(this)">
+        <div class="assess-check"></div>
+        <div class="assess-text">People are showing interest, but conversion is inconsistent</div>
+      </div>
+      <div class="assess-item" onclick="toggleAssess(this)">
+        <div class="assess-check"></div>
+        <div class="assess-text">You rely too much on manual follow-up to close business</div>
+      </div>
+      <div class="assess-item" onclick="toggleAssess(this)">
+        <div class="assess-check"></div>
+        <div class="assess-text">Good leads disappear between first click and next action</div>
+      </div>
+      <div class="assess-item" onclick="toggleAssess(this)">
+        <div class="assess-check"></div>
+        <div class="assess-text">Your current funnel treats every buyer the same way</div>
+      </div>
+      <div class="assess-item" onclick="toggleAssess(this)">
+        <div class="assess-check"></div>
+        <div class="assess-text">You know you have attention, but not a working monetization layer</div>
+      </div>
+    </div>
+
+    <div class="assess-cta reveal">
+      <a href="#pricing" class="btn btn-solid">Yes — Install My Quick Flip →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ AGENT MATRIX ═══════════ -->
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="eyebrow reveal">The Engine Room</div>
+    <h2 class="sec-title reveal">ZO RUNS THE ENGINE.<br>YOU COLLECT THE REVENUE.</h2>
+    <p class="sec-sub reveal">Zo is not a chatbot. Zo is an autonomous AI COO — a street-smart operator managing a 7-agent execution stack that learns and adapts daily.</p>
+
+    <table class="agent-table reveal">
+      <thead>
+        <tr>
+          <th>Agent</th>
+          <th>Schedule</th>
+          <th>Mission</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Lead Hunter<span class="agent-badge">daily</span></td>
+          <td>7:30 AM</td>
+          <td>Scrapes TikTok, YouTube, LinkedIn for creators (5K–100K followers) with monetization gaps</td>
+        </tr>
+        <tr>
+          <td>Closer Engine</td>
+          <td>9:00 AM</td>
+          <td>Executes DM/email sequences, scores leads, books calls to Calendly</td>
+        </tr>
+        <tr>
+          <td>LinkedIn Daily</td>
+          <td>9:00 AM</td>
+          <td>Generates authority content, warms outbound leads</td>
+        </tr>
+        <tr>
+          <td>LinkedIn Outreach</td>
+          <td>9:00 AM</td>
+          <td>Personalized connection requests to qualified prospects</td>
+        </tr>
+        <tr>
+          <td>Fulfillment</td>
+          <td>11:00 AM</td>
+          <td>Builds offer pages, configures Stripe links, sets up email funnels</td>
+        </tr>
+        <tr>
+          <td>Nightly Consolidator</td>
+          <td>11:00 PM</td>
+          <td>Reviews daily logs, updates CRM, writes Daily Heartbeat to system memory</td>
+        </tr>
+        <tr>
+          <td>Sunday Evolution<span class="agent-badge">weekly</span></td>
+          <td>Sun 8 PM</td>
+          <td>Self-improvement loop — analyzes weekly patterns, updates SOUL.md</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════ 3-LAYER MEMORY ═══════════ -->
+<section class="section">
+  <div class="wrap">
+    <div class="eyebrow reveal">Cognitive Architecture</div>
+    <h2 class="sec-title reveal">IT GETS SMARTER<br>EVERY WEEK.</h2>
+    <p class="sec-sub reveal">The engine separates its <em style="color:var(--accent);font-style:normal">why</em> from its <em style="color:var(--accent);font-style:normal">how</em>. It can pivot tactics without losing its core values.</p>
+
+    <div class="memory-flow reveal">
+      <div class="mem-node">
+        <div class="mem-file">SOUL.md</div>
+        <div class="mem-role">Layer 01 — Core Values</div>
+        <div class="mem-desc">The immutable foundation. Beliefs that no tactic can override. What Zo stands for — regardless of what the market demands.</div>
+      </div>
+      <div class="mem-node">
+        <div class="mem-file">IDENTITY.md</div>
+        <div class="mem-role">Layer 02 — Operating Persona</div>
+        <div class="mem-desc">How Zo shows up in every interaction. Voice, tone, decision framework. Consistent, deliberate, and commercially sharp.</div>
+      </div>
+      <div class="mem-node">
+        <div class="mem-file">BOOTSTRAP.md</div>
+        <div class="mem-role">Layer 03 — Execution Instructions</div>
+        <div class="mem-desc">The live playbook. Updated dynamically. Zo reads this at boot every day. It reflects what's working right now — not last month.</div>
+      </div>
+    </div>
+
+    <div class="memory-note reveal">
+      Every Sunday, the Evolution agent reviews the full week, updates SOUL.md, and refines execution logic.
+      <em>It is smarter on Monday than it was on Friday.</em> The system compounds — not just the revenue.
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 30-DAY ROADMAP ═══════════ -->
+<section class="section section-alt" id="roadmap">
+  <div class="wrap">
+    <div class="eyebrow reveal">Execution Timeline</div>
+    <h2 class="sec-title reveal">WEEK 1 TO $49K/MO</h2>
+
+    <div class="roadmap-grid">
+      <div class="phase-card reveal">
+        <div class="phase-ghost-num">01</div>
+        <div class="phase-num">Phase 01</div>
+        <div class="phase-title">Close Heavy</div>
+        <div class="phase-week">Week 1–2</div>
+        <p class="phase-desc">Immediate ROI. Maximum outbound volume. Every agent runs at full capacity. High-intent prospects. Move fast.</p>
+        <div class="phase-goal">→ Target: $10K–$20K in sales</div>
+      </div>
+      <div class="phase-card reveal" style="transition-delay:.1s">
+        <div class="phase-ghost-num">02</div>
+        <div class="phase-num">Phase 02</div>
+        <div class="phase-title">Proof Domination</div>
+        <div class="phase-week">Week 2–3</div>
+        <p class="phase-desc">Auto-generate case studies and social proof assets from early wins. Lower future acquisition cost. The flywheel starts.</p>
+        <div class="phase-goal">→ Target: 3–5 case studies deployed</div>
+      </div>
+      <div class="phase-card reveal" style="transition-delay:.18s">
+        <div class="phase-ghost-num">03</div>
+        <div class="phase-num">Phase 03</div>
+        <div class="phase-title">Inbound Engine</div>
+        <div class="phase-week">Week 3–4</div>
+        <p class="phase-desc">LinkedIn authority + paid traffic activated. Less cold outreach dependency. Inbound pipeline warms. Efficiency compounds.</p>
+        <div class="phase-goal">→ Target: 40% inbound ratio</div>
+      </div>
+      <div class="phase-card reveal" style="transition-delay:.26s">
+        <div class="phase-ghost-num">04</div>
+        <div class="phase-num">Phase 04</div>
+        <div class="phase-title">High-Ticket Scale</div>
+        <div class="phase-week">Week 4+</div>
+        <p class="phase-desc">Ghost Partner tier unlocked. Revenue share model activated. The engine fully self-manages. Scale without headcount.</p>
+        <div class="phase-goal">→ Target: 16 closes = $49,180/mo</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ WHY FUNNELS FAIL ═══════════ -->
+<section class="section">
+  <div class="wrap">
+    <div class="eyebrow reveal">Structural Diagnosis</div>
+    <h2 class="sec-title reveal">WHY MOST FUNNELS FAIL</h2>
+    <p class="sec-sub reveal">Most funnels fail for predictable, fixable reasons. Here they are:</p>
+
+    <div class="fail-grid">
+      <div class="fail-card reveal">
+        <div class="fail-x">✗</div>
+        <div class="fail-text">They assume every buyer wants a sales call</div>
+      </div>
+      <div class="fail-card reveal" style="transition-delay:.08s">
+        <div class="fail-x">✗</div>
+        <div class="fail-text">They assume every lead needs the same follow-up sequence</div>
+      </div>
+      <div class="fail-card reveal" style="transition-delay:.16s">
+        <div class="fail-x">✗</div>
+        <div class="fail-text">They assume the founder will respond fast enough to capture intent</div>
+      </div>
+      <div class="fail-card reveal" style="transition-delay:.24s">
+        <div class="fail-x">✗</div>
+        <div class="fail-text">They assume attention stays warm long enough to recover manually</div>
+      </div>
+    </div>
+
+    <p class="fail-footer reveal">
+      None of those assumptions hold. Ghost Engine is built for the real environment: <em>fragmented attention, delayed response, uneven lead quality.</em> It doesn't assume. It detects, scores, and moves.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════ GUARANTEE ═══════════ -->
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="eyebrow reveal">Risk Reversal</div>
+    <h2 class="sec-title reveal">ZERO RISK.<br>FULL EXPOSURE.</h2>
+
+    <div class="guarantee-grid">
+      <div class="guarantee-card reveal">
+        <div class="g-icon">⚡</div>
+        <div>
+          <div class="g-title">24-Hour Implementation</div>
+          <p class="g-text">System live within 24 hours or you pay nothing. Not 24 business days. Not "we're working on it." 24 hours — agents running, pipeline seeded, funnel active.</p>
+        </div>
+      </div>
+      <div class="guarantee-card reveal" style="transition-delay:.1s">
+        <div class="g-icon">🔒</div>
+        <div>
+          <div class="g-title">Performance Guarantee</div>
+          <p class="g-text">If you don't capture 10+ qualified leads in 30 days: full refund. You keep the system and all assets. We don't win until you win. That's the only arrangement we accept.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ PRICING ═══════════ -->
+<section class="section" id="pricing">
+  <div class="wrap">
+    <div class="eyebrow reveal">The Offer Ladder</div>
+    <h2 class="sec-title reveal">THE OFFER LADDER</h2>
+    <p class="sec-sub reveal">Start where you are. Scale when you're ready.</p>
+
+    <div class="pricing-grid">
+
+      <!-- Quick Flip -->
+      <div class="pricing-card reveal">
+        <div class="price-tier">Tier 01</div>
+        <div class="price-name">Quick Flip</div>
+        <div class="price-amount"><sup>$</sup>297</div>
+        <div class="price-tagline">Fast install. Fast movement. Low friction.<br>The fastest way to put a Ghost layer between your traffic and lost revenue.</div>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li>48-hour delivery</li>
+          <li>Offer page + Stripe link configured</li>
+          <li>3-step email sequence written</li>
+          <li>Intent detection layer active</li>
+          <li>Ghost monitoring begins immediately</li>
+        </ul>
+        <a href="#" class="price-btn price-btn-outline">Install Quick Flip</a>
+      </div>
+
+      <!-- Full Engine (featured) -->
+      <div class="pricing-card feat reveal" style="transition-delay:.1s">
+        <div class="feat-badge">FULL SYSTEM</div>
+        <div class="price-tier">Tier 02</div>
+        <div class="price-name">Full Engine</div>
+        <div class="price-amount"><sup>$</sup>4,970</div>
+        <div class="price-tagline">For operators who want the complete monetization infrastructure. Not a tool — a revenue operating system.</div>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li>14-day deployment</li>
+          <li>Full backend build</li>
+          <li>Landing pages + automations</li>
+          <li>CRM setup + pipeline</li>
+          <li>Signal capture + qualification logic</li>
+          <li>Routing + conversion architecture</li>
+          <li>30-day performance guarantee</li>
+        </ul>
+        <a href="#" class="price-btn price-btn-solid">Get the Full Engine</a>
+      </div>
+
+      <!-- Skip the Call -->
+      <div class="pricing-card reveal" style="transition-delay:.2s">
+        <div class="price-tier">Tier 03</div>
+        <div class="price-name">Skip The Call</div>
+        <div class="price-amount" style="font-size:2rem;margin-top:.5rem">Direct Buy</div>
+        <div class="price-tagline">Some buyers don't need more persuasion. They need a clean path. This is that path.</div>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li>Direct-buy motion for decisive buyers</li>
+          <li>No sales call required</li>
+          <li>Implementation starts immediately</li>
+          <li>Clean conversion path — no friction</li>
+          <li>Full Ghost layer behind the buy</li>
+        </ul>
+        <a href="#" class="price-btn price-btn-outline">Skip the Call →</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ ZO AS ENTITY ═══════════ -->
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="eyebrow reveal">The Intelligence Layer</div>
+    <h2 class="sec-title reveal">ZO MONITORS.<br>LEARNS. ADAPTS DAILY.</h2>
+    <p class="sec-sub reveal">Ghost Engine is the system. Zo is the active intelligence behind it.</p>
+
+    <div class="zo-block">
+      <div class="zo-points reveal">
+        <div class="zo-point">
+          <div class="zp-dot"></div>
+          <div class="zp-text"><strong>Not a tool you configure once and forget.</strong> Zo reviews every interaction, identifies what converts, and updates its own execution logic every week. It operates as an autonomous COO — not a static script.</div>
+        </div>
+        <div class="zo-point">
+          <div class="zp-dot"></div>
+          <div class="zp-text"><strong>This framing matters.</strong> The product becomes active infrastructure — not a passive setup. It's the difference between a system that depreciates and one that compounds.</div>
+        </div>
+        <div class="zo-point">
+          <div class="zp-dot"></div>
+          <div class="zp-text"><strong>Every Sunday it evolves.</strong> Patterns from the week get analyzed. SOUL.md gets updated. The engine enters Monday with sharper execution. You don't have to touch it. That's the point.</div>
+        </div>
+      </div>
+
+      <div class="zo-terminal reveal" style="transition-delay:.15s">
+        <div class="zo-term-bar">
+          <div class="dd dd-r"></div><div class="dd dd-y"></div><div class="dd dd-g"></div>
+          <span class="lbl">zo · master · autonomous mode</span>
+        </div>
+        <div class="zo-term-body">
+          <div><span class="tp">$</span><span class="tc">zo --boot</span></div>
+          <span class="to">▸ SOUL.md ·········· values loaded</span>
+          <span class="to">▸ IDENTITY.md ······ persona active</span>
+          <span class="to">▸ BOOTSTRAP.md ····· instructions set</span>
+          <span class="to">▸ Memory initialized · OK</span>
+          <div style="margin-top:.3rem"><span class="tp">$</span><span class="tc">zo --run agents</span></div>
+          <span class="to">▸ Lead Hunter ········ [07:30] RUNNING</span>
+          <span class="to">▸ Closer Engine ······ [09:00] RUNNING</span>
+          <span class="to">▸ LinkedIn Outreach ·· [09:00] RUNNING</span>
+          <span class="to">▸ Fulfillment ········ [11:00] STANDBY</span>
+          <span class="to">▸ Consolidator ······· [23:00] SCHEDULED</span>
+          <div style="margin-top:.3rem"><span class="tp">$</span><span class="tc">zo --status revenue</span></div>
+          <span class="to">▸ Pipeline: 12 qualified leads</span>
+          <span class="to">▸ Intent signals: 14 (last 24h)</span>
+          <span class="to">▸ Conversion paths: 3 active</span>
+          <div style="margin-top:.3rem"><span class="tp">$</span><span class="cursor-blink"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ LESSONS LEARNED ═══════════ -->
+<section class="section">
+  <div class="wrap">
+    <div class="eyebrow reveal">Field Intelligence</div>
+    <h2 class="sec-title reveal">LESSONS LEARNED</h2>
+    <p class="sec-sub reveal">What building Ghost Engine taught us about revenue, attention, and where money actually leaks.</p>
+
+    <div class="lessons-grid">
+      <div class="lesson-card reveal">
+        <div class="lesson-q">Stop Building More Explanation</div>
+        <p class="lesson-a">We stopped building more documentation. We started building the system that catches intent. Explanation doesn't close. Detection and routing does. Ghost Engine is the operating layer — not the pitch deck.</p>
+      </div>
+      <div class="lesson-card reveal" style="transition-delay:.1s">
+        <div class="lesson-q">Revenue Leaks in the Gap</div>
+        <p class="lesson-a">Ghost Engine came out of a simple lesson: revenue leaks happen in the space between attention and action. If nobody watches that gap, you lose deals you never knew were close. The gap is where Ghost lives.</p>
+      </div>
+      <div class="lesson-card reveal" style="transition-delay:.18s">
+        <div class="lesson-q">Interest ≠ Action</div>
+        <p class="lesson-a">Interest and action are separated by a system problem — not a desire problem. The buyer wanted it. The funnel didn't catch them. Ghost Engine is the catch. This is not more documentation. It is the operating layer.</p>
+      </div>
+      <div class="lesson-card reveal" style="transition-delay:.26s">
+        <div class="lesson-q">The 2 AM Buyer Won't Wait</div>
+        <p class="lesson-a">They showed up ready. The system wasn't ready for them. That's a fixable problem. Ghost Engine doesn't sleep. Zo doesn't miss the 2 AM signal. That's why the engine runs 24 hours — because buyers don't schedule themselves.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ FINAL CTA ═══════════ -->
+<section class="section final-cta">
+  <div class="wrap" style="text-align:center">
+    <div class="eyebrow reveal" style="justify-content:center;max-width:600px;margin:0 auto 1.5rem">The Decision</div>
+    <h2 class="final-headline reveal">
+      IF GHOST ISN'T CATCHING YOUR BUYERS,<br>
+      YOUR FUNNEL IS <em>LEAKING MONEY.</em>
+    </h2>
+    <p class="final-sub reveal">
+      Every day you delay, interest is still showing up. Some of it is qualified.
+      Some of it is ready. Some of it would buy now if the path were clear.
+    </p>
+    <div class="final-ctas reveal">
+      <a href="#pricing" class="btn btn-solid" style="font-size:.84rem;padding:1rem 2.4rem">⚡ Install Quick Flip — $297</a>
+      <a href="#pricing" class="btn btn-outline">Get the Full Engine — $4,970</a>
+      <a href="#pricing" class="final-link">Skip the Call →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">GHOST ENGINE</div>
+    <p class="footer-built">Built by Derek Jamieson · Powered by <em>Zo</em></p>
+    <p class="footer-tag">Ship the code. Ship the proof.</p>
+    <div class="footer-links">
+      <a href="https://github.com/djbiz/ghost-engine" target="_blank" rel="noopener">GitHub</a>
+      <a href="#system">System</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+    <p class="footer-copy">© 2026 Ghost Engine. All rights reserved.</p>
+  </div>
+</footer>
+
+<!-- ═══════════ FLOATING CTA ═══════════ -->
+<a href="#pricing" id="float-cta">⚡ Install Now</a>
+
+<!-- ═══════════ JAVASCRIPT ═══════════ -->
+<script>
+/* ── Mobile nav ── */
+function toggleNav(){
+  document.getElementById('navLinks').classList.toggle('open');
+}
+
+/* ── Intersection Observer — reveal ── */
+const revealObs = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting) e.target.classList.add('in');
+  });
+},{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
+
+/* ── Trigger above-fold reveals on load ── */
+window.addEventListener('load',()=>{
+  document.querySelectorAll('.reveal').forEach(el=>{
+    if(el.getBoundingClientRect().top < window.innerHeight)
+      setTimeout(()=>el.classList.add('in'),80);
+  });
+});
+
+/* ── Counter animations ── */
+function fmtNum(n,prefix,suffix,fmt){
+  if(fmt==='money') return prefix+n.toLocaleString('en-US');
+  return prefix+n+suffix;
+}
+function animateNum(el){
+  const target = +el.dataset.target;
+  const prefix = el.dataset.prefix||'';
+  const suffix = el.dataset.suffix||'';
+  const fmt    = el.dataset.fmt||'';
+  const dur = 1900;
+  const t0  = performance.now();
+  function tick(now){
+    const p = Math.min((now-t0)/dur,1);
+    const e = 1-Math.pow(1-p,3);
+    el.textContent = fmtNum(Math.floor(e*target),prefix,suffix,fmt);
+    if(p<1) requestAnimationFrame(tick);
+    else el.textContent = fmtNum(target,prefix,suffix,fmt);
+  }
+  requestAnimationFrame(tick);
+}
+const countObs = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting && !e.target._counted){
+      e.target._counted = true;
+      animateNum(e.target);
+    }
+  });
+},{threshold:.5});
+document.querySelectorAll('[data-target]').forEach(el=>countObs.observe(el));
+
+/* ── Self-assessment checkboxes ── */
+function toggleAssess(el){
+  el.classList.toggle('checked');
+}
+
+/* ── Smooth scroll ── */
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    const href = a.getAttribute('href');
+    if(href==='#') return;
+    const target = document.querySelector(href);
+    if(target){
+      e.preventDefault();
+      target.scrollIntoView({behavior:'smooth',block:'start'});
+      document.getElementById('navLinks').classList.remove('open');
+    }
+  });
+});
+
+/* ── Floating CTA ── */
+const floatBtn = document.getElementById('float-cta');
+const heroEl   = document.getElementById('top');
+const floatObs = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    floatBtn.classList.toggle('visible',!e.isIntersecting);
+  });
+},{threshold:.2});
+floatObs.observe(heroEl);
+
+/* ── Live dashboard counter flicker ── */
+(function dashLive(){
+  const sig = document.getElementById('sig-count');
+  if(!sig) return;
+  setInterval(()=>{
+    const base = 14;
+    const jitter = Math.floor(Math.random()*3);
+    sig.textContent = base + jitter;
+  }, 4700);
+})();
+</script>
+</body>
+</html>
