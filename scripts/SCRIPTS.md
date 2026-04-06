@@ -32,4 +32,30 @@ Four scripts for discovering, scoring, and qualifying creator leads through Apol
 ### apollo-search-workflow.js
 **Size:** 3732 bytes | **Category:** Lead Acquisition
 
-**Purpose:** Interactive CLI for Apollo.io lead search across 4 creator segments (fitness 10-50K, coaches 25-100K, lifestyle YouTubers 50K+, LinkedIn leaders 5K+). Reads API key from env, scores by engagement and niche relevance
+**Purpose:** Interactive CLI for Apollo.io lead search across 4 creator segments (fitness 10-50K, coaches 25-100K, lifestyle YouTubers 50K+, LinkedIn leaders 5K+). Reads API key from env, scores by engagement and niche relevance, exports qualified leads to CSV with enriched contact data.
+
+| Field | Details |
+|-------|----------|
+| **Key Functions** | `searchSegment()`, `scoreResults()`, `exportToCSV()`, `runInteractiveSearch()` |
+| **Dependencies** | axios, readline, fs; env APOLLO_API_KEY |
+| **Integration Points** | Feeds crm.js and linkedin-scorer.js |
+
+---
+
+### linkedin-scorer.js
+**Size:** 5822 bytes | **Category:** Lead Acquisition
+
+**Purpose:** Weighted scoring engine evaluating creators on 6 factors (followers 40pts, niche 30pts, email 15pts, profile 15pts, content 30pts, recency 10pts). Max 140 normalized to 0-100. Tiers: Hot 80+, Warm 60-79, Cold 40-59, Dead <40. Platform modifiers for IG/YT/TT/LI.
+
+| Field | Details |
+|-------|----------|
+| **Key Functions** | `calculateScore()`, `getScoreTier()`, `applyPlatformModifiers()`, `calculateLinkedInModifiers()` |
+| **Dependencies** | None (pure logic module) |
+| **Integration Points** | Used by outreach-engine.js, crm.js, pipeline-automation.js |
+
+---
+
+### lead-scraper.js
+**Size:** 4250 bytes | **Category:** Lead Acquisition
+
+**Purpose:** Multi-platform scraping engine discovering creator profiles from IG, YT, TikTok, LinkedIn via APIs and web scraping fallbacks. Rate limiting (2/s IG, 5/s YT), proxy rotation,
