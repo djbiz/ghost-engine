@@ -1,5 +1,18 @@
 # Ghost Engine
 
+## 🚀 Launch Status — April 6, 2026
+
+| Component | Status |
+|-----------|--------|
+| Offer ladder | ✅ Live ($990 / $4,970 / $9,700) |
+| Email outreach engine | ✅ GetResponse connected |
+| Domain rotation + warmup | ✅ 3 domains configured |
+| CRM + lead pipeline | ✅ 10 leads, 1 active client |
+| Daily runner | ✅ Auto-check + pipeline alert |
+| Video audit generator | ✅ Personalized scripts |
+| LinkedIn DMs | ⏳ Unlocks ~April 10-11 |
+| Video recording | ⏳ Waiting on Derek to film |
+
 **AI-Powered Monetization Engine for Creators and Operators**
 
 > Built by [Derek Jamieson](https://twitter.com/derekjamieson) -- Powered by Zo, the autonomous AI COO.
