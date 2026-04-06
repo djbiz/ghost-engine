@@ -1,0 +1,29 @@
+name: Sunday Evolution Cycle
+
+on:
+  schedule:
+    - cron: '0 20 * * 0'
+  workflow_dispatch:
+
+jobs:
+  evolve:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Sunday Evolution
+        run: node scripts/sunday-evolution.js
+
+      - name: Commit and push SOUL.md changes
+        run: |
+          git config user.name 'ghost-engine[bot]'
+          git config user.email 'ghost-engine[bot]@users.noreply.github.com'
+          git add system/SOUL.md
+          git diff --cached --quiet || git commit -m 'evolution: weekly SOUL.md update [skip ci]'
+          git push
