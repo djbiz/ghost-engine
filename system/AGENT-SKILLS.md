@@ -1,93 +1,92 @@
-# AGENT-SKILLS -- Ghost Engine
+# AGENT-SKILLS.md -- Ghost Engine
+
+## Overview
+
+Two primary agents power Ghost Engine: **Lead Hunter** finds high-potential creators with attention but no backend revenue; **Closer Engine** converts those leads into paying clients. Both run under operator AI "Zo" with unified CRM and three-layer memory.
+
+---
 
 ## Lead Hunter Agent
 
-**Schedule:** Daily at 7:30 AM | **Sources:** TikTok, YouTube, LinkedIn (10K-100K followers)
+- **Schedule:** Daily at 7:30 AM
+- **Sources:** TikTok, YouTube, LinkedIn (10K-100K followers)
+- **Target:** Creators with audience but no courses, funnels, or email monetization
 
 ### Scoring (140 pts raw, normalized 0-100)
 
-| Factor | Max | Weight |
-|---|---|---|
-| Followers / Audience Size | 40 | 28.6% |
-| Niche Match | 30 | 21.4% |
-| Content Signals | 30 | 21.4% |
-| Email Availability | 15 | 10.7% |
-| Profile Completeness | 15 | 10.7% |
-| Activity Recency | 10 | 7.1% |
+| Factor | Max | Weight | Details |
+|---|---|---|---|
+| Followers | 40 | 28.6% | 100K+=40, 50-99K=32, 25-49K=24, 10-24K=16, 5-9K=10, 1-4K=5 |
+| Niche Match | 30 | 21.4% | Full=30, partial=15. Niches: coaching, consulting, SaaS, agency, e-commerce, fitness, finance, crypto |
+| Email | 15 | 10.7% | Verified=15, Unverified=8, None=0 |
+| Profile | 15 | 10.7% | Photo=3, Bio=3, Website=3, Location=3, Industry=3 |
+| Content | 30 | 21.4% | Engagement >5%=15, 2-5%=10. Frequency 3+/wk=10. Video=5 |
+| Recency | 10 | 7.1% | 7d=10, 30d=6, 90d=3 |
 
-### Tiers
+### Tiers: Hot (80-100, <2hr SLA) | Warm (60-79, <24hr) | Cold (40-59, <72hr) | Dead (<40, archive)
 
-| Tier | Range | SLA |
-|---|---|---|
-| Hot | 80-100 | < 2 hours |
-| Warm | 60-79 | < 24 hours |
-| Cold | 40-59 | < 72 hours |
-| Dead | < 40 | N/A |
+### Platform Modifiers
+- LinkedIn: +5 Creator Mode, +3 500+ connections, -5 no photo
+- TikTok: +5 1M+ likes, +3 avg views >10K, -5 <50 videos
+- YouTube: +5 monetized, +3 avg >5K views, -5 <20 videos
 
-### Disqualification
-
-Fake/bot, competitor, blacklisted domain, inactive > 6 months, previous opt-out, inappropriate content, or duplicate.
-
-### Decay
-
-7d = -2, 14d = -5, 30d = -10, 60d = -20, 90d = -30. Min score: 0. Reset on engagement. Cron: midnight UTC daily. Full re-score: Sundays 2 AM UTC.
-
-### Output
-
-`leads/active.csv`: name, platform, handle, followers, email, niche, raw_score, normalized_score, tier, scraped_at, decay_applied.
+### Rules
+- Disqualify: existing course/funnel, <1K followers, 90d inactive, duplicate, competitor
+- Decay: -5 pts/week no signal, drop tier after 2 weeks, auto-archive <20
 
 ---
 
 ## Closer Engine Agent
 
-**Trigger:** Hot leads immediately; Warm leads after nurture engagement
-**Channels:** LinkedIn DM, TikTok DM, Email, Discovery Call
+- **Trigger:** Hot tier (80+) or manual escalation
+- **Channels:** Email, DM (Instagram, LinkedIn, TikTok), SMS
 
-### Outreach (Days 0-14)
+### 14-Day Outreach Sequence
 
-| Day | Action | Channel |
+| Day | Channel | Action |
 |---|---|---|
-| 0 | Initial DM + email | DM + Email |
-| 2 | Problem deep dive | Email |
-| 3 | Engage their content | Platform |
-| 5 | Case study / proof | Email |
-| 7 | Follow-up DM | DM |
-| 9 | Offer framework | Email |
-| 14 | Soft close | Email |
+| 0 | DM | Personalized intro, no pitch |
+| 1 | Email | Value-first with case study |
+| 3 | DM | Engage on recent post |
+| 5 | Email | CTA -- free strategy session |
+| 7 | DM | Social proof / testimonial |
+| 10 | Email | Urgency -- limited spots |
+| 14 | DM | Final follow-up, open door |
 
 ### Call Booking
+- Calendly/Cal.com, Mon-Fri 9-5 (auto-timezone), 24h+1h reminders, 15min no-show reschedule
 
-30-min discovery call, Mon-Fri 10 AM-4 PM EST. No-show: reschedule within 1 hour.
+### SPIN Discovery Script
+1. Situation: current strategy  2. Problem: audience-to-revenue gap  3. Implication: cost of inaction  4. Need-Payoff: $10K-$50K/mo system
 
-### Discovery Call Script
+### Offers: Starter $2,500 | Growth $5,000 | Scale $10,000+
 
-1. Opener (2 min) -- rapport
-2. Situation (5 min) -- current monetization
-3. Problem (5 min) -- attention vs revenue gap
-4. Implication (5 min) -- cost of inaction
-5. Solution (8 min) -- Ghost Engine offer
-6. Close (5 min) -- objections, pricing, next steps
+### Pipeline: New Lead > Contacted > Engaged > Call Booked > Call Complete > Proposal Sent > Closed Won/Lost
 
-### Offers
+### Objection Handling
+- "Too expensive" -> ROI reframe  - "Need to think" -> specificity question  - "DIY" -> timeline compression  - "Bad timing" -> future follow-up  - "Been burned" -> guarantee/case study
 
-| Offer | Price | Timeline |
-|---|---|---|
-| Quick Flip | $990 | 48 hours |
-| Full Engine Install | $4,970 | 10-14 days |
-| Custom Scope | Quote | TBD |
+### KPIs: >15% reply rate, >30% reply-to-call, >25% close rate, $5K+ avg deal, <14d close, $50K+/mo target
 
-### Pipeline Stages
+---
 
-New Lead > Contacted > Engaged > Call Booked > Call Completed > Proposal Sent > Won / Lost
+## Shared Infrastructure
 
-### KPIs
+### Three-Layer Memory
+1. **STM:** Session context, cleared per run
+2. **LTM:** All profiles, history, outcomes in CRM + vector DB
+3. **Episodic:** Winning templates and sequences, learned from past
 
-| Metric | Target |
+### Unified CRM
+- Single source (Airtable/HubSpot), real-time scores, auto-advance stages, daily digest at 8 PM
+
+### Operator AI -- Zo
+- Orchestrates agents, escalates >$10K deals, overrides scores/sequences, weekly performance reviews
+
+---
+
+## Changelog
+
+| Date | Change |
 |---|---|
-| DM response rate | > 15% |
-| Call booking rate | > 25% |
-| Call show rate | > 80% |
-| Close rate | > 20% |
-| Avg deal value | > $2,500 |
-| Time to close | < 14 days |
-| Monthly revenue | > $25,000 |
+| 2026-04-06 | Comprehensive documentation -- Lead Hunter scoring, Closer Engine sequences, shared infrastructure |
