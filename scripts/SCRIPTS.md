@@ -83,4 +83,82 @@ Four scripts for discovering, scoring, and qualifying creator leads through Apol
 
 ## 2. Outreach & DM
 
-Four scripts managing multi-channel outreach with templates, fo
+Four scripts managing multi-channel outreach with templates, follow-ups, and reply classification.
+
+---
+
+### outreach-engine.js
+**Size:** 6150 bytes | **Category:** Outreach & DM
+
+**Purpose:** Core outreach automation for multi-channel campaigns (IG DM, LinkedIn InMail, email, Twitter DM). A/B testing with significance tracking, send windows 9am-6pm recipient TZ, 50 DMs/day cap per platform, auto cool-down on response.
+
+| Field | Details |
+|-------|---------|
+| **Key Functions** | `sendOutreach()`, `selectTemplate()`, `trackABTest()`, `manageSendWindow()`, `handleResponse()` |
+| **Dependencies** | axios, node-cron, nodemailer; env SMTP_CONFIG, IG_SESSION, LI_TOKEN |
+| **Integration Points** | Reads crm.js; uses dm-templates.js; triggers followup-scheduler.js |
+
+---
+
+### dm-templates.js
+**Size:** 3480 bytes | **Category:** Outreach & DM
+
+**Purpose:** Template engine with dynamic variable substitution for 12 merge fields. Maintains 6 categories: cold intro, warm follow-up, social proof, case study share, pricing tease, close attempt. Each has 3-4 A/B variants.
+
+| Field | Details |
+|-------|---------|
+| **Key Functions** | `getTemplate()`, `renderTemplate()`, `getVariantForABTest()`, `listTemplateCategories()` |
+| **Dependencies** | handlebars, fs |
+| **Integration Points** | Consumed by outreach-engine.js and followup-scheduler.js |
+
+---
+
+### followup-scheduler.js
+**Size:** 4102 bytes | **Category:** Outreach & DM
+
+**Purpose:** Follow-up sequencing with configurable delays (2d, 5d, 10d, 21d). Halts on reply, exponential backoff on bounce, escalates hot leads to manual review after 4 touches. Timezone-aware scheduling.
+
+| Field | Details |
+|-------|---------|
+| **Key Functions** | `scheduleFollowup()`, `checkResponseStatus()`, `escalateToManual()`, `getNextInSequence()` |
+| **Dependencies** | node-cron, moment-timezone; reads crm.js |
+| **Integration Points** | Triggered by outreach-engine.js; updates crm.js; escalates to deal-tracker.js |
+
+---
+
+### reply-detector.js
+**Size:** 2876 bytes | **Category:** Outreach & DM
+
+**Purpose:** NLP reply classifier categorizing messages into 5 types: positive interest, pricing inquiry, objection, not interested, auto-reply/OOO. Keyword matching with weighted scoring and sentiment analysis. Routes to workflow branches.
+
+| Field | Details |
+|-------|---------|
+| **Key Functions** | `classifyReply()`, `analyzeSentiment()`, `extractIntent()`, `routeToWorkflow()` |
+| **Dependencies** | natural (NLP lib); sentiment lexicon in data/ |
+| **Integration Points** | Monitors outreach-engine.js replies; updates crm.js; triggers followup branching |
+
+---
+
+## 3. Pipeline & CRM
+
+Three scripts providing centralized lead management, workflow automation, and deal tracking.
+
+---
+
+### crm.js
+**Size:** 7230 bytes | **Category:** Pipeline & CRM
+
+**Purpose:** Central CRM with 8-stage lifecycle: new, contacted, engaged, qualified, proposal-sent, negotiating, closed-won, closed-lost. JSON file persistence with atomic writes, bulk ops, query filtering by stage/score/date, full audit trail.
+
+| Field | Details |
+|-------|---------|
+| **Key Functions** | `addLead()`, `updateStage()`, `queryLeads()`, `getAuditTrail()`, `bulkUpdate()`, `exportPipeline()` |
+| **Dependencies** | fs, path; data in data/crm-store.json |
+| **Integration Points** | Core dep for outreach-engine, pipeline-automation, deal-tracker, revenue-forecast |
+
+---
+
+### pipeline-automation.js
+**Size:** 5190 bytes | **Category:** Pipeline & CRM
+
+**Purpose:** Workflow automation monitoring CRM transitions and triggering downstream actions. Rules engine evaluates score thresholds, time-in-stage limits, engagement signals for auto-ad
