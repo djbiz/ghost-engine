@@ -1,4 +1,5 @@
 'use strict';
+var idempotencyUtils = require('./idempotency-utils');
 
 const fs = require('fs');
 const path = require('path');
@@ -61,6 +62,14 @@ function createScoreDecayActivities(config) {
   }
 
   async function runScoreDecay({ date }) {
+    var opts = arguments[arguments.length - 1] && typeof arguments[arguments.length - 1] === 'object' && arguments[arguments.length - 1].__idempotency ? arguments[arguments.length - 1] : {};
+    if (opts.idempotencyKey && idempotencyUtils.wasAlreadyProcessed(opts.idempotencyKey)) {
+      console.log('[SKIP] runScoreDecay already processed for key: ' + opts.idempotencyKey);
+      return { skipped: true, reason: 'duplicate', idempotencyKey: opts.idempotencyKey };
+    }
+    if (typeof opts.expectedStateVersion === 'number') {
+      idempotencyUtils.checkAndBumpVersion('runScoreDecay', opts.expectedStateVersion);
+    }
     console.log(`[score-decay-activity] Starting decay run for ${date}`);
 
     if (!fs.existsSync(crmPath)) {
@@ -93,6 +102,9 @@ function createScoreDecayActivities(config) {
     fs.writeFileSync(crmPath, output, 'utf-8');
 
     console.log(`[score-decay-activity] Finished: ${rows.length} leads processed, ${decayedCount} decayed`);
+    if (opts.idempotencyKey) {
+      idempotencyUtils.markProcessed(opts.idempotencyKey, 'runScoreDecay');
+    }
     return { processed: rows.length, decayed: decayedCount };
   }
 
