@@ -61,10 +61,17 @@ function verifySignature(body, signature) {
   hmac.update(body);
   const expected = hmac.digest('hex');
 
-  return crypto.timingSafeEqual(
-    Buffer.from(signature || '', 'utf8'),
-    Buffer.from(expected, 'utf8'),
-  );
+  // Linear sends: "sha256=<hex>" — strip the prefix so buffers match in length
+  const providedSig = (signature || '').replace(/^sha256=/, '');
+  const sigBuffer = Buffer.from(providedSig, 'hex');
+  const expectedBuffer = Buffer.from(expected, 'hex');
+
+  // Guard: timingSafeEqual crashes on length mismatch — return false safely
+  if (sigBuffer.length !== expectedBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(sigBuffer, expectedBuffer);
 }
 
 function extractLeadFromTitle(title) {

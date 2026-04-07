@@ -96,6 +96,7 @@ async function outboundChainWorkflow(input = {}) {
     issueTitle: input.issueTitle,
     leadEmail: input.leadEmail,
     leadName: input.leadName,
+    newStatus: input.newStatus,
     workflowId: info.workflowId,
     runId: info.runId,
   });
