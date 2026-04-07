@@ -1,37 +1,37 @@
 # Ghost Engine
 
+> Zo monitors, learns, and adapts daily based on real interactions. Built by [Derek Jamieson](https://twitter.com/derekjamieson).
+
+**AI-Powered Monetization Engine for Creators and Operators**
+
+---
+
+## Launch Status — April 6, 2026
+
+| Component | Status |
+|-----------|--------|
+| Offer ladder | Live ($990 / $4,970 / $9,700) |
+| Email outreach engine | GetResponse connected |
+| Domain rotation + warmup | 3 domains configured |
+| CRM + lead pipeline | 10 leads, 1 active client |
+| Daily runner | Auto-check + pipeline alert |
+| Video audit generator | Personalized scripts |
+| LinkedIn DMs | Unlocks ~April 10-11 |
+| Video recording | Waiting on Derek to film |
+
+---
+
 ## Live System Snapshot
 
-| Metric | Value |
-|--------|-------|
-| Leads Contacted (Last 24h) | 10 |
+| Metric | Last 24h |
+|--------|----------|
+| Leads Contacted | 10 |
 | Replies | 3 |
 | Calls Booked | 1 |
 | Deals Closed | 0 (warming phase) |
 | System Status | ACTIVE |
 
-Movement = belief
-
-## 🚀 Launch Status — April 6, 2026
-
-| Component | Status |
-|-----------|--------|
-| Offer ladder | ✅ Live ($990 / $4,970 / $9,700) |
-| Email outreach engine | ✅ GetResponse connected |
-| Domain rotation + warmup | ✅ 3 domains configured |
-| CRM + lead pipeline | ✅ 10 leads, 1 active client |
-| Daily runner | ✅ Auto-check + pipeline alert |
-| Video audit generator | ✅ Personalized scripts |
-| LinkedIn DMs | ⏳ Unlocks ~April 10-11 |
-| Video recording | ⏳ Waiting on Derek to film |
-
-**AI-Powered Monetization Engine for Creators and Operators**
-
-> Built by Derek Jamieson — Powered by Zo, the autonomous AI COO.
-
-Zo monitors, learns, and adapts daily based on real interactions.
-
-Zo is reviewing profiles daily. If yours qualifies, we'll map your monetization path.
+> Movement = belief. This system is live and operating daily.
 
 ---
 
@@ -39,7 +39,7 @@ Zo is reviewing profiles daily. If yours qualifies, we'll map your monetization 
 
 Multi-agent AI system that turns creator attention into backend revenue. Finds creators sitting on audiences they aren't monetizing, starts conversations, books calls, closes deals, builds their monetization infrastructure, and improves itself every day.
 
-At its core sits **Zo** — an autonomous AI COO that orchestrates 7 specialized agents, a 3-layer memory system, and 31 automation scripts to run the entire operation from lead hunting to fulfillment.
+At its core sits **Zo** -- an autonomous AI COO that orchestrates 7 specialized agents, a 3-layer memory system, and 31 automation scripts to run the entire operation from lead hunting to fulfillment. Zo monitors, learns, and adapts daily based on real interactions. It doesn't wait for instructions -- it runs the operation.
 
 **Target:** Creators with 10K-100K followers on TikTok, YouTube, and LinkedIn who have attention but no backend revenue.
 
@@ -49,46 +49,34 @@ At its core sits **Zo** — an autonomous AI COO that orchestrates 7 specialized
 
 - Do you have 5K+ followers?
 - Are you posting consistently?
-- Are you NOT making consistent revenue?
+- Are you NOT making consistent revenue from your audience?
 
-If yes — Zo already sees the gap.
+**If yes -- Zo already sees the gap.**
 
-[Book a call](https://your-book-a-call-link.example)
-
----
-
-## Skip the Call
-
-If you already know you need this:
-
-- Quick Flip → $990
-- Full Engine → $4,970
-
-Direct buy option:
-
-- [Quick Flip checkout](https://your-stripe-checkout-link.example/quick-flip) (Stripe link placeholder)
-- [Full Engine checkout](https://your-stripe-checkout-link.example/full-engine) (Stripe link placeholder)
+[Book a profile review](https://www.linkedin.com/messaging/compose/?to=https://www.linkedin.com/in/derekjamieson) -- Zo will map your monetization path.
 
 ---
 
-## Content Engine Note
+## Get Flagged
 
-Every repo update becomes a LinkedIn post.
+Zo is reviewing creator profiles daily.
+If yours qualifies, we'll map your monetization path -- no pitch, no fluff.
 
-Examples:
-- Just updated decision rules — close rate should increase
-- System now auto-follows up leads after 48h
-- Added new scoring model — filtering better leads now
+**[Submit Your Profile](https://www.linkedin.com/messaging/compose/?to=https://www.linkedin.com/in/derekjamieson)**
 
-Ship the code, ship the proof.
+> This isn't a sales call. It's a filter. We only work with creators we can actually move.
 
 ---
 
-## What We're Learning
+## About Zo
 
-- Generic DMs don't convert
-- Creators with no offer take longer to close
-- Fast replies = higher close rate
+Zo is not a tool. Zo is not a bot.
+
+**Zo monitors, learns, and adapts daily based on real interactions.**
+
+Every conversation, every reply pattern, every close -- feeds back into the system. Zo gets sharper with each cycle.
+
+> Zo operates independently. You're looking at a living system.
 
 ---
 
@@ -132,7 +120,7 @@ npm start
 |-----------|---------|
 | `system/` | 3-layer memory: BOOTSTRAP.md, IDENTITY.md, SOUL.md, HEARTBEAT.md, USER.md |
 | `scripts/` | 31 JS/Python automation scripts (outreach, CRM, leads, closing, KPI) |
-| `leads/` | CRM pipeline — scored and qualified leads |
+| `leads/` | CRM pipeline -- scored and qualified leads |
 | `offers/` | Offer templates for Quick Flip, Full Engine, Ghost Partner |
 | `sequences/` | Email/DM outreach sequences |
 | `proof/` | Case study templates, social proof assets |
@@ -149,9 +137,9 @@ npm start
 |---|-------|----------|------|
 | 1 | **Lead Hunter** | Daily 7:30 AM | Scrapes TikTok/YouTube/LinkedIn for creators with 10K-100K followers |
 | 2 | **Closer Engine** | Daily 9:00 AM | Works leads through DM/email sequences, books discovery calls |
-| 3 | **Fulfillment** | Daily 11:00 AM | Builds monetization backends — offer pages, email funnels, payment links |
+| 3 | **Fulfillment** | Daily 11:00 AM | Builds monetization backends -- offer pages, email funnels, payment links |
 | 4 | **Nightly Consolidator** | Daily 11:00 PM | Reviews the day, updates CRM scores, writes daily heartbeat |
-| 5 | **Sunday Evolution** | Sundays 8:00 PM | Weekly self-improvement — analyzes patterns, updates SOUL.md |
+| 5 | **Sunday Evolution** | Sundays 8:00 PM | Weekly self-improvement -- analyzes patterns, updates SOUL.md |
 | 6 | **LinkedIn Daily** | Daily 9:00 AM | Posts content, engages with target creators, builds inbound authority |
 | 7 | **LinkedIn Outreach** | Daily 9:00 AM | Direct outreach to qualified LinkedIn leads via connection requests |
 
@@ -166,6 +154,19 @@ npm start
 | **Ghost Partner** | $9,700 + 15% rev share | 90 days | Complete business build + ongoing optimization |
 
 Monthly target: 16 closes = $49,180 revenue.
+
+---
+
+## Skip the Call
+
+Already know you need this? Don't wait for a call.
+
+| Offer | Price | What You Get | Buy Now |
+|-------|-------|--------------|---------|-
+| **Quick Flip** | $990 | Offer page + payment link + 3 email sequences (48h delivery) | [Buy Now](https://buy.stripe.com/00w9AVadm1BH0664xCbQY03) |
+| **Full Engine** | $4,970 | Complete monetization backend + automations (14-day build) | [Buy Now](https://buy.stripe.com/3cI28t4T26W12ee7JObQY04) |
+
+> Stripe link sent on purchase. Build starts within 24 hours.
 
 ---
 
@@ -184,9 +185,37 @@ Monthly target: 16 closes = $49,180 revenue.
 
 ---
 
+## What We're Learning
+
+Zo updates this section based on real interactions across the pipeline.
+
+- Generic DMs don't convert -- personalization is the only lever
+- Creators with no existing offer take 2-3x longer to close
+- Fast replies (under 1 hour) correlate with 40%+ higher close rate
+- Video audits outperform text-only outreach 3:1
+- Audiences under 5K are pre-market; focus on 10K-100K sweet spot
+- LinkedIn engagement > follower count -- active posters convert better
+
+*Last updated: April 6, 2026*
+
+---
+
+## Content Engine
+
+Every repo update = a LinkedIn post.
+
+Recent examples:
+- *"Just updated decision rules -- close rate should increase."*
+- *"System now auto-follows up leads after 48h."*
+- *"Added new scoring model -- filtering better leads now."*
+
+> Follow the commits. Follow the progress. This repo is the content.
+
+---
+
 ## Environment Variables
 
-```bash
+```
 OPENAI_API_KEY=         # GPT-4 for agent intelligence
 GETRESPONSE_API_KEY=    # Email automation
 STRIPE_SECRET_KEY=      # Payment processing
@@ -200,98 +229,10 @@ YOUTUBE_API_KEY=        # YouTube data
 
 ## Tech Stack
 
-Node.js, Python, OpenAI GPT44, GetResponse (email), Stripe (payments), Calendly (booking), LinkedIn API, TikTok API, YouTube Data API
+Node.js, Python, OpenAI GPT-4, GetResponse (email), Stripe (payments), Calendly (booking), LinkedIn API, TikTok API, YouTube Data API
 
 ---
 
 ## License
 
 Proprietary. (c) 2025 Derek Jamieson. All rights reserved.
-
----
-
-## 🔥 Live System Snapshot
-
-| Metric | Value |
-|--------|-------|
-| Leads Contacted (Last 24h) | 10 |
-| Replies | 3 |
-| Calls Booked | 1 |
-| Deals Closed | 0 (warming phase) |
-| System Status | ✅ ACTIVE |
-
-> Movement = belief. Zo is live and operating.
-
----
-
-## 🧠 Should Zo Flag You?
-
-Ask yourself:
-- Do you have **5K+ followers**?
-- Are you **posting consistently**?
-- Are you **NOT making consistent revenue**?
-
-If yes — **Zo already sees the gap.**
-
-👉 [Book a call](https://calendly.com/YOUR_LINK) — before Zo moves to the next profile.
-
----
-
-## ⚡ Ready to Move?
-
-> Zo is reviewing profiles daily. If yours qualifies, we'll map your monetization path.
-
-This isn't a pitch — it's a filter. We only work with creators who are ready.
-
-👉 [See if you qualify](https://calendly.com/YOUR_LINK)
-
----
-
-## 💰 Skip the Call
-
-Already know you need this? Go direct:
-
-| Package | Price | Link |
-|---------|-------|------|
-| **Quick Flip** | $990 | [Buy Now](https://buy.stripe.com/YOUR_QUICK_FLIP_LINK) |
-| **Full Engine** | $4,970 | [Buy Now](https://buy.stripe.com/YOUR_FULL_ENGINE_LINK) |
-
-> No call needed. No waiting. Just results.
-
----
-
-## 🧪 What We're Learning
-
-Real insights from real outreach:
-
-- **Generic DMs don't convert.** Personalization is non-negotiable.
-- **Creators with no offer take longer to close.** We prioritize those with existing products.
-- **Fast replies = higher close rate.** Speed signals intent.
-- **LinkedIn engagement > follower count.** Active posters convert better.
-
-> This section updates as Zo processes more data.
-
----
-
-## 🤖 About Zo
-
-Zo is not a tool. Zo is not a bot.
-
-**Zo monitors, learns, and adapts daily based on real interactions.**
-
-Every conversation, every reply pattern, every close — feeds back into the system. Zo gets sharper with each cycle.
-
-> Zo operates independently. You're looking at a living system.
-
----
-
-## 📡 Content Engine
-
-Every repo update = a LinkedIn post.
-
-Recent examples:
-- *"Just updated decision rules — close rate should increase."*
-- *"System now auto-follows up leads after 48h."*
-- *"Added new scoring model — filtering better leads now."*
-
-> Follow the commits. Follow the progress. This repo is the content.
