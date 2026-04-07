@@ -1,5 +1,6 @@
 'use strict';
 
+var idempotencyUtils = require('./idempotency-utils');
 var fs = require('fs');
 var path = require('path');
 
@@ -22,6 +23,14 @@ function createContentEngineActivities(config) {
     var runId = input.runId;
     var date = input.date;
 
+    // Idempotency guard: skip if this runId was already processed
+    var idempotencyKey = 'content-engine:' + runId + ':' + date;
+    var existing = await idempotencyUtils.checkProcessed(idempotencyKey);
+    if (existing) {
+      console.log('[ContentEngine] Skipping already-processed run: ' + idempotencyKey);
+      return existing;
+    }
+
     // Gather content signals from pipeline data
     var signals = gatherSignals(dataDir, date);
 
@@ -43,6 +52,9 @@ function createContentEngineActivities(config) {
     var briefPath = path.join(briefsDir, 'content-brief-' + date + '.json');
     fs.writeFileSync(briefPath, JSON.stringify(brief, null, 2));
     console.log('[ContentEngine] Brief archived: ' + briefPath);
+
+    // Mark this run as processed for idempotency
+    await idempotencyUtils.markProcessed(idempotencyKey, brief);
 
     return brief;
   }
