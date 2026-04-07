@@ -53,7 +53,7 @@ At its core sits **Zo** -- an autonomous AI COO that orchestrates 7 specialized 
 
 **If yes — Zo already sees the gap.**
 
-→ [Book a profile review](https://calendly.com/derekjamieson) — Zo will map your monetization path.
+→ [Book a profile review](https://www.linkedin.com/messaging/compose/?to=https://www.linkedin.com/in/derekjamieson) — Zo will map your monetization path.
 
 ---
 
