@@ -151,8 +151,8 @@ Already know you need this? Don't wait for a call.
 
 | Offer | Price | What You Get | Buy Now |
 |-------|-------|--------------|---------|
-| **Quick Flip** | $990 | Offer page + payment link + 3 email sequences (48h delivery) | [→ Buy Now](#) |
-| **Full Engine** | $4,970 | Complete monetization backend + automations (14-day build) | [→ Buy Now](#) |
+| **Quick Flip** | $990 | Offer page + payment link + 3 email sequences (48h delivery) | [→ Buy Now](https://buy.stripe.com/00w9AVadm1BH0664xCbQY03) |
+| **Full Engine** | $4,970 | Complete monetization backend + automations (14-day build) | [→ Buy Now](https://buy.stripe.com/3cI28t4T26W12ee7JObQY04) |
 
 > Stripe link sent on purchase. Build starts within 24 hours.
 
