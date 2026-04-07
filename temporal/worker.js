@@ -1,57 +1,28 @@
-const { NativeConnection, Worker } = require('@temporalio/worker');
-const { getTemporalConfig, getTemporalConnectionOptions } = require('./config');
-const { createCampaignActivities } = require('./activities');
-const { createHeartbeatActivities } = require('./heartbeat-activities');
-const { createObservability } = require('./observability');
+'use strict';
 
-async function createCampaignWorker(overrides = {}) {
-  const config = getTemporalConfig(overrides.config || {});
-  const observability = overrides.observability || createObservability(config.serviceName, {
-    namespace: config.namespace,
-    taskQueue: config.taskQueue,
-  });
-  const connection = overrides.connection || await NativeConnection.connect(
-    overrides.connectionOptions || getTemporalConnectionOptions(config),
-  );
+const { Worker } = require('@temporalio/worker');
+const { createScoreDecayActivities } = require('./score-decay-activities');
+const { createSundayEvolutionActivities } = require('./sunday-evolution-activities');
+
+const TASK_QUEUE = 'ghost-engine-campaigns';
+
+async function run() {
+  const config = { basePath: process.env.GHOST_ENGINE_BASE || process.cwd() };
+
+  const scoreDecay = createScoreDecayActivities(config);
+  const sundayEvolution = createSundayEvolutionActivities(config);
 
   const worker = await Worker.create({
-    connection,
-    namespace: config.namespace,
-    taskQueue: config.taskQueue,
-    workflowsPath: require.resolve('./workflows'),
-    activities: overrides.activities || {
-      ...createCampaignActivities({
-        config,
-        observability,
-      }),
-      ...createHeartbeatActivities({
-        config,
-        observability,
-      }),
-    },
-    logger: observability.logger,
+    workflowsPath: require.resolve('./score-decay-workflow'),
+    activities: { ...scoreDecay, ...sundayEvolution },
+    taskQueue: TASK_QUEUE,
   });
 
-  return { worker, connection, config, observability };
+  console.log(`[ghost-engine] Worker started on task queue: ${TASK_QUEUE}`);
+  await worker.run();
 }
 
-async function runCampaignWorker(overrides = {}) {
-  const { worker, connection, config, observability } = await createCampaignWorker(overrides);
-  observability.logger.info('temporal.worker.starting', {
-    address: config.address,
-    namespace: config.namespace,
-    taskQueue: config.taskQueue,
-    profile: config.profile,
-  });
-
-  try {
-    await worker.run();
-  } finally {
-    await connection?.close?.();
-  }
-}
-
-module.exports = {
-  createCampaignWorker,
-  runCampaignWorker,
-};
+run().catch((err) => {
+  console.error('[ghost-engine] Worker failed:', err);
+  process.exit(1);
+});
