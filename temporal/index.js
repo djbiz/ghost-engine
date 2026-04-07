@@ -6,8 +6,11 @@ module.exports = {
   ...require('./observability'),
   ...require('./activities'),
   ...require('./heartbeat-activities'),
+  ...require('./outbound-chain-activities'),
+  ...require('./linear-activities'),
   ...require('./campaign-workflow'),
   ...require('./heartbeat-workflows'),
+  ...require('./outbound-chain-workflow'),
   ...require('./workflows'),
   ...require('./worker'),
 };
