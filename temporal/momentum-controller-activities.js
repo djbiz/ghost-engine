@@ -1,5 +1,7 @@
 'use strict';
 
+var idempotencyUtils = require('./idempotency-utils');
+
 const fs = require('fs');
 const path = require('path');
 
@@ -47,7 +49,7 @@ function createMomentumControllerActivities(config = {}) {
    *
    * Trigger rules (evaluated in priority order):
    *   leads >= 80 AND closes >= 75 -> SURGE  (2.0x)
-   *   viralContent is truthy        -> SPIKE  (1.75x)
+   *   viralContent is truthy        -> SPKKE  (1.75x)
    *   pipelineHealth >= 80          -> STACK  (1.5x)
    *   activityLevel < 20            -> DRY    (0.5x)
    *   otherwise                     -> NORMAL (1.0x)
@@ -63,6 +65,15 @@ function createMomentumControllerActivities(config = {}) {
   }
 
   async function runMomentumAdjust(input) {
+    var opts = arguments[arguments.length - 1] && typeof arguments[arguments.length - 1] === 'object' && arguments[arguments.length - 1].__idempotency ? arguments[arguments.length - 1] : {};
+    if (opts.idempotencyKey && idempotencyUtils.wasAlreadyProcessed(opts.idempotencyKey)) {
+      console.log('[SKIP] runMomentumAdjust already processed for key: ' + opts.idempotencyKey);
+      return { skipped: true, reason: 'duplicate', idempotencyKey: opts.idempotencyKey };
+    }
+    if (typeof opts.expectedStateVersion === 'number') {
+      idempotencyUtils.checkAndBumpVersion('runMomentumAdjust', opts.expectedStateVersion);
+    }
+
     const { date, metrics } = input;
     const state = loadState();
     const previousState = state.current;
@@ -92,6 +103,8 @@ function createMomentumControllerActivities(config = {}) {
     }
 
     saveState(state);
+
+    if (opts.idempotencyKey) { idempotencyUtils.markProcessed(opts.idempotencyKey, 'runMomentumAdjust'); }
 
     return {
       date,
