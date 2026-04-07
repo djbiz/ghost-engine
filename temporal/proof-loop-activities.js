@@ -3,6 +3,8 @@
 // Returns { runProofLoop }
 'use strict';
 
+const { alreadyProcessed, markProcessed, stateVersionMatch } = require('./idempotency-utils');
+
 const fs = require('fs');
 const path = require('path');
 
@@ -40,6 +42,15 @@ function createProofLoopActivities(config) {
    */
   async function runProofLoop({ date }) {
     const today = date || new Date().toISOString().slice(0, 10);
+
+    // --- Idempotency guard ---
+    const idempotencyKey = `proof-loop:${today}`;
+    if (await alreadyProcessed(idempotencyKey)) {
+      return { dealsProcessed: 0, date: today, assets: [], skipped: true, reason: 'already-processed' };
+    }
+    if (!stateVersionMatch()) {
+      throw new Error('State version mismatch -- aborting proof-loop to prevent stale processing');
+    }
 
     // --- Read CRM data ---
     const crmPath = path.join(baseDir, 'data', 'crm.csv');
@@ -143,6 +154,10 @@ function createProofLoopActivities(config) {
         files: ['case-study-outline.md', 'social-post.md', 'win-announcement.txt'],
       });
     });
+
+
+    // --- Mark as processed for idempotency ---
+    await markProcessed(idempotencyKey, { dealsProcessed: closedWonDeals.length, date: today });
 
     return { dealsProcessed: closedWonDeals.length, date: today, assets };
   }
