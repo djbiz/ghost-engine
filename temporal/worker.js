@@ -4,6 +4,9 @@ const { createCampaignActivities } = require('./activities');
 const { createHeartbeatActivities } = require('./heartbeat-activities');
 const { createOutboundChainActivities } = require('./outbound-chain-activities');
 const { createLinearActivities } = require('./linear-activities');
+const { createPipelineLifecycleActivities } = require('./pipeline-lifecycle-activities');
+const { createProofLoopActivities } = require('./proof-loop-activities');
+const { createSignalDetectionActivities } = require('./signal-detection-activities');
 const { createObservability } = require('./observability');
 
 async function createCampaignWorker(overrides = {}) {
@@ -35,6 +38,18 @@ async function createCampaignWorker(overrides = {}) {
         observability,
       }),
       ...createLinearActivities({
+        config,
+        observability,
+      }),
+      ...createPipelineLifecycleActivities({
+        config,
+        observability,
+      }),
+      ...createProofLoopActivities({
+        config,
+        observability,
+      }),
+      ...createSignalDetectionActivities({
         config,
         observability,
       }),

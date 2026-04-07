@@ -1,153 +1,372 @@
-// temporal/proof-loop-activities.js
-// Factory: createProofLoopActivities(config)
-// Returns { runProofLoop }
-'use strict';
-
 const fs = require('fs');
 const path = require('path');
+const { getTemporalConfig } = require('./config');
+const { createStateStore } = require('./state-store');
+const { createObservability } = require('./observability');
 
 /**
- * Factory that returns proof-loop activity functions.
- * @param {object} config
- * @param {string} config.baseDir - project root directory
- * @returns {{ runProofLoop: function }}
+ * Proof loop activities.
+ *
+ * Replaces the logic from:
+ *   - scripts/proof-loop.js (case study + authority posts + breakdown)
+ *   - scripts/automation-proof-loop.js (unprocessed wins -> proof assets)
+ *
+ * Every close generates:
+ *   1 case study, 3 authority posts, 1 breakdown, 1 close log entry,
+ *   MEMORY.md update, lessons-learned.md update.
  */
-function createProofLoopActivities(config) {
-  const baseDir = config && config.baseDir ? config.baseDir : process.cwd();
 
-  /**
-   * Parse a CSV file into an array of row objects.
-   * Handles missing files gracefully by returning [].
-   */
-  function parseCsv(filePath) {
-    if (!fs.existsSync(filePath)) return [];
-    const raw = fs.readFileSync(filePath, 'utf-8').trim();
-    if (!raw) return [];
-    const [headerLine, ...lines] = raw.split('\n');
-    const headers = headerLine.split(',').map(h => h.trim());
-    return lines.map(line => {
-      const values = line.split(',').map(v => v.trim());
-      const row = {};
-      headers.forEach((h, i) => { row[h] = values[i] || ''; });
-      return row;
-    });
+function createProofLoopActivities(options = {}) {
+  const config = getTemporalConfig(options.config || {});
+  const observability = options.observability || createObservability(config.serviceName, {
+    namespace: config.namespace,
+    taskQueue: config.taskQueue,
+  });
+  const store = options.stateStore || createStateStore({
+    filePath: config.statePath,
+    namespace: config.namespace,
+    logger: observability.logger,
+  });
+
+  const rootDir = options.rootDir || path.resolve(__dirname, '..');
+  const proofDir = path.join(rootDir, 'proof');
+  const leadsDir = path.join(rootDir, 'leads');
+
+  function ensureDir(dir) {
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   }
 
-  /**
-   * Core activity: detects new closed-won deals from CRM,
-   * generates proof assets (case study outlines, social posts,
-   * win announcements), and writes them to data/proof-assets/.
-   */
-  async function runProofLoop({ date }) {
-    const today = date || new Date().toISOString().slice(0, 10);
-
-    // --- Read CRM data ---
-    const crmPath = path.join(baseDir, 'data', 'crm.csv');
-    const crmRows = parseCsv(crmPath);
-
-    // --- Detect closed-won deals for today ---
-    const closedWonDeals = crmRows.filter(r => {
-      const status = (r.status || r.Status || '').toLowerCase();
-      const rowDate = r.date || r.Date || '';
-      return rowDate.startsWith(today) && (status === 'closed-won' || status === 'closed won');
+  // ---------------------------------------------------------------
+  // Activity: resolveClientContext
+  // ---------------------------------------------------------------
+  async function resolveClientContext(input = {}) {
+    observability.logger.info('proofLoop.resolveClient', {
+      name: input.clientName,
+      email: input.clientEmail,
+      tier: input.tier,
     });
 
-    if (closedWonDeals.length === 0) {
-      return { dealsProcessed: 0, date: today, assets: [] };
+    // Try to enrich from clients/active.csv if available
+    const clientsFile = path.join(rootDir, 'clients', 'active.csv');
+    let enriched = null;
+
+    if (fs.existsSync(clientsFile)) {
+      const raw = fs.readFileSync(clientsFile, 'utf8').trim();
+      if (raw) {
+        const lines = raw.split('\n');
+        const headers = lines[0].split(',').map((h) => h.trim());
+        for (let i = 1; i < lines.length; i++) {
+          const vals = lines[i].split(',');
+          const row = {};
+          headers.forEach((h, idx) => { row[h] = (vals[idx] || '').trim(); });
+          if (
+            (input.clientEmail && row.email === input.clientEmail) ||
+            (input.clientName && row.name && row.name.toLowerCase().includes(input.clientName.toLowerCase()))
+          ) {
+            enriched = row;
+            break;
+          }
+        }
+      }
     }
 
-    // --- Generate proof assets ---
-    const assetsDir = path.join(baseDir, 'data', 'proof-assets');
-    fs.mkdirSync(assetsDir, { recursive: true });
+    const context = {
+      name: input.clientName || (enriched && enriched.name) || 'Client',
+      email: input.clientEmail || (enriched && enriched.email) || null,
+      platform: input.platform || (enriched && enriched.platform) || 'their platform',
+      followers: input.followers || (enriched && enriched.followers) || 'their audience',
+      tier: input.tier || (enriched && enriched.tier) || 'Quick Flip',
+      investment: input.investment || '$990',
+      timeline: input.timeline || '48 hours',
+      result: input.result || 'Revenue system installed',
+      quote: input.quote || 'This changed everything.',
+      details: input.details || 'Monetization system installed. Revenue engine running.',
+      resolvedFrom: enriched ? 'clients_csv' : 'input',
+      resolvedAt: new Date().toISOString(),
+    };
 
-    const assets = [];
-
-    closedWonDeals.forEach((deal, idx) => {
-      const company = deal.company || deal.Company || deal.name || deal.Name || `Deal-${idx + 1}`;
-      const value = deal.value || deal.Value || deal.amount || deal.Amount || 'N/A';
-      const slug = company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '');
-      const dealDir = path.join(assetsDir, `${today}-${slug}`);
-      fs.mkdirSync(dealDir, { recursive: true });
-
-      // Case study outline
-      const caseStudy = [
-        `# Case Study: ${company}`,
-        ``,
-        `**Close Date:** ${today}`,
-        `**Deal Value:** ${value}`,
-        ``,
-        `## Challenge`,
-        `[Describe the problem ${company} faced before engagement.]`,
-        ``,
-        `## Solution`,
-        `[Describe the Ghost Engine approach and deliverables.]`,
-        ``,
-        `## Results`,
-        `[Quantify outcomes: revenue impact, efficiency gains, timeline.]`,
-        ``,
-        `## Quote`,
-        `> "[Client testimonial placeholder]" —  ${company}`,
-        ``,
-        `---`,
-        `Generated: ${new Date().toISOString()}`,
-      ].join('\n');
-      fs.writeFileSync(path.join(dealDir, 'case-study-outline.md'), caseStudy, 'utf-8');
-
-      // Social post
-      const socialPost = [
-        `NEW WIN: ${company}`,
-        ``,
-        `We just closed a deal with ${company} (${value}).`,
-        ``,
-        `Here's what made the difference:`,
-        `- Targeted outreach via Ghost Engine campaigns`,
-        `- Proof-driven follow-up sequence`,
-        `- Fast time-to-value delivery`,
-        ``,
-        `More details coming soon.`,
-        ``,
-        `#GhostEngine #ClosedWon #B2BSales`,
-        ``,
-        `---`,
-        `Generated: ${new Date().toISOString()}`,
-      ].join('\n');
-      fs.writeFileSync(path.join(dealDir, 'social-post.md'), socialPost, 'utf-8');
-
-      // Win announcement
-      const winAnnouncement = [
-        `WIN ANNOUNCEMENT`,
-        `================`,
-        ``,
-        `Company:    ${company}`,
-        `Deal Value: ${value}`,
-        `Close Date: ${today}`,
-        ``,
-        `Summary:`,
-        `${company} has officially signed. This deal demonstrates`,
-        `the effectiveness of our ghost-engine-campaigns pipeline.`,
-        ``,
-        `Next Steps:`,
-        `- Kick off onboarding within 48 hours`,
-        `- Collect testimonial within 30 days`,
-        `- Publish case study within 60 days`,
-        ``,
-        `---`,
-        `Generated: ${new Date().toISOString()}`,
-      ].join('\n');
-      fs.writeFileSync(path.join(dealDir, 'win-announcement.txt'), winAnnouncement, 'utf-8');
-
-      assets.push({
-        company,
-        value,
-        directory: dealDir,
-        files: ['case-study-outline.md', 'social-post.md', 'win-announcement.txt'],
-      });
-    });
-
-    return { dealsProcessed: closedWonDeals.length, date: today, assets };
+    observability.metrics.increment('proofLoop.client.resolved', 1, { tier: context.tier });
+    return context;
   }
 
-  return { runProofLoop };
+  // ---------------------------------------------------------------
+  // Activity: generateCaseStudy
+  // ---------------------------------------------------------------
+  async function generateCaseStudy(input = {}) {
+    const d = input.client;
+    const id = Date.now();
+    ensureDir(proofDir);
+
+    const content = `# CASE STUDY: How ${d.name} Made ${d.result} in ${d.timeline}
+
+## The Client
+- **Name:** ${d.name}
+- **Platform:** ${d.platform}
+- **Followers:** ${d.followers}
+- **Problem:** Monetization gap
+
+## The Offer
+- **Tier:** ${d.tier}
+- **Investment:** ${d.investment}
+- **Timeline:** ${d.timeline}
+
+## The Result
+**${d.result}**
+
+## What We Built
+${d.details}
+
+## Testimonial
+> "${d.quote}"
+${d.name !== 'Client' ? '- ' + d.name : ''}
+
+## The Gap (Before vs After)
+| | Before | After |
+|---|---|---|
+| Monthly Revenue | $0 | ${d.result} |
+| Monetization | None | Full engine |
+| Content | Posting | Converting |
+
+---
+*Generated by Ghost Engine Temporal proof loop on ${new Date().toISOString().split('T')[0]}*
+`;
+
+    const filePath = path.join(proofDir, `${id}-case-study.md`);
+    fs.writeFileSync(filePath, content, 'utf8');
+
+    observability.logger.info('proofLoop.caseStudy.generated', { client: d.name, filePath });
+    observability.metrics.increment('proofLoop.caseStudy.created', 1);
+
+    return { filePath, id, content, type: 'case-study' };
+  }
+
+  // ---------------------------------------------------------------
+  // Activity: generateAuthorityPosts
+  // ---------------------------------------------------------------
+  async function generateAuthorityPosts(input = {}) {
+    const d = input.client;
+    const id = Date.now();
+    ensureDir(proofDir);
+
+    const posts = [
+      {
+        title: 'Result Hook',
+        content: `Just turned ${d.followers} followers into ${d.result} in ${d.timeline}.
+
+${d.name !== 'Client' ? d.name : 'A creator'} had the attention. Didn't have the system.
+
+${d.timeline} later? Money machine installed.
+
+The gap is never the content. It's the monetization layer.
+
+(If you have an audience and no revenue system - let's talk.)`,
+      },
+      {
+        title: 'Pattern Interrupt',
+        content: `"Views don't pay your bills"
+
+I keep saying this. ${d.name !== 'Client' ? d.name : 'This creator'} finally heard it.
+
+${d.followers} followers. Zero monthly revenue.
+
+Now? ${d.result} in ${d.timeline}.
+
+The problem was never the content. It was never the followers.
+
+It was the missing money system.
+
+(If this sounds familiar - I probably already know your numbers. DM me.)`,
+      },
+      {
+        title: 'Education + CTA',
+        content: `How to know if you need a monetization engine:
+
+1. You have an audience (any platform)
+2. You have engagement (people actually show up)
+3. You have ZERO consistent monthly revenue
+
+If all 3 are true - you don't have a content problem.
+
+You have a backend problem.
+
+I fix the backend.
+
+(DM me "engine" if you want to see how it works.)`,
+      },
+    ];
+
+    const filePaths = [];
+    for (let i = 0; i < posts.length; i++) {
+      const fp = path.join(proofDir, `${id}-authority-post-${i + 1}.md`);
+      fs.writeFileSync(fp, `# POST ${i + 1} - ${posts[i].title}\n${posts[i].content}`, 'utf8');
+      filePaths.push(fp);
+    }
+
+    observability.logger.info('proofLoop.authorityPosts.generated', { client: d.name, count: posts.length });
+    observability.metrics.increment('proofLoop.authorityPosts.created', posts.length);
+
+    return { filePaths, count: posts.length, posts, type: 'authority-posts' };
+  }
+
+  // ---------------------------------------------------------------
+  // Activity: generateBreakdown
+  // ---------------------------------------------------------------
+  async function generateBreakdown(input = {}) {
+    const d = input.client;
+    const id = Date.now();
+    ensureDir(proofDir);
+
+    const content = `# THE BREAKDOWN: ${d.name}
+
+**Platform:** ${d.platform}
+**Followers:** ${d.followers}
+**Tier:** ${d.tier}
+**Investment:** ${d.investment}
+**Result:** ${d.result} in ${d.timeline}
+
+---
+
+## BEFORE
+- Audience: Yes
+- Revenue: $0/mo
+- Monetization: None
+- Offers: None
+
+## AFTER
+- Audience: Still growing
+- Revenue: ${d.result}
+- Monetization: Full engine
+- Offers: ${d.tier}
+
+## WHAT WE BUILT
+${d.details}
+
+## WHAT THIS PROVES
+You don't need more followers. You need a system.
+
+---
+
+*Ghost Engine - We build the money machine.*`;
+
+    const filePath = path.join(proofDir, `${id}-breakdown.md`);
+    fs.writeFileSync(filePath, content, 'utf8');
+
+    observability.logger.info('proofLoop.breakdown.generated', { client: d.name, filePath });
+    observability.metrics.increment('proofLoop.breakdown.created', 1);
+
+    return { filePath, id, content, type: 'breakdown' };
+  }
+
+  // ---------------------------------------------------------------
+  // Activity: queueProofContent
+  // ---------------------------------------------------------------
+  async function queueProofContent(input = {}) {
+    const { authorityPosts, client } = input;
+
+    // Blotato integration point.
+    // For now we log the intent and mark queued. The actual Blotato API
+    // call will be wired when the Blotato MCP or API key is configured.
+    observability.logger.info('proofLoop.blotato.queue', {
+      client: client.name,
+      postCount: authorityPosts.count,
+    });
+
+    // Persist queue intent to state store so a future beat can pick it up
+    await store.set(`proofLoop:blotato:${Date.now()}`, {
+      client: client.name,
+      posts: authorityPosts.posts.map((p) => p.title),
+      queuedAt: new Date().toISOString(),
+      status: 'pending_publish',
+    });
+
+    observability.metrics.increment('proofLoop.blotato.queued', authorityPosts.count);
+
+    return {
+      queued: true,
+      postCount: authorityPosts.count,
+      note: 'Posts queued for Blotato. Publish authority-post-1 TODAY. Use breakdown as carousel this week.',
+    };
+  }
+
+  // ---------------------------------------------------------------
+  // Activity: updateMemoryAndLessons
+  // ---------------------------------------------------------------
+  async function updateMemoryAndLessons(input = {}) {
+    const d = input.client;
+    const date = new Date().toISOString().split('T')[0];
+
+    // Update MEMORY.md
+    const memoryPath = path.join(rootDir, 'MEMORY.md');
+    if (fs.existsSync(memoryPath)) {
+      const entry = `\n## Win: ${d.name}\n- **Date:** ${date}\n- **Platform:** ${d.platform}\n- **Tier:** ${d.tier}\n- **Result:** ${d.result}\n- **Key insight:** See lessons-learned.md\n`;
+      fs.appendFileSync(memoryPath, entry, 'utf8');
+    }
+
+    // Update lessons-learned.md
+    const lessonsPath = path.join(rootDir, 'lessons-learned.md');
+    if (fs.existsSync(lessonsPath)) {
+      const entry = `\n## Close: ${d.name}\n- **Date:** ${date}\n- **Tier:** ${d.tier}\n- **What worked:** ${d.details}\n- **What to remember:** Log this win.\n`;
+      fs.appendFileSync(lessonsPath, entry, 'utf8');
+    }
+
+    observability.logger.info('proofLoop.memory.updated', { client: d.name });
+    observability.metrics.increment('proofLoop.memory.updated', 1);
+
+    return { memoryUpdated: fs.existsSync(memoryPath), lessonsUpdated: fs.existsSync(lessonsPath) };
+  }
+
+  // ---------------------------------------------------------------
+  // Activity: appendCloseLog
+  // ---------------------------------------------------------------
+  async function appendCloseLog(input = {}) {
+    const { client, caseStudy, authorityPosts, breakdown } = input;
+    const closeLogPath = path.join(rootDir, 'close-log.jsonl');
+
+    const entry = {
+      ts: new Date().toISOString(),
+      type: 'proof_loop_triggered',
+      source: 'temporal',
+      client: client.name,
+      platform: client.platform,
+      followers: client.followers,
+      tier: client.tier,
+      investment: client.investment,
+      result: client.result,
+      quote: client.quote,
+      files: [
+        caseStudy.filePath,
+        ...authorityPosts.filePaths,
+        breakdown.filePath,
+      ],
+      workflowId: input.workflowId,
+      runId: input.runId,
+    };
+
+    fs.appendFileSync(closeLogPath, JSON.stringify(entry) + '\n', 'utf8');
+
+    // Mark as processed so automation-proof-loop.js doesn't double-fire
+    const processedFile = path.join(leadsDir, 'proof-processed.txt');
+    if (client.email) {
+      fs.appendFileSync(processedFile, `${client.email}\n`);
+    }
+
+    observability.logger.info('proofLoop.closeLog.appended', { client: client.name });
+    observability.metrics.increment('proofLoop.closeLog.appended', 1);
+
+    return { logged: true, entry };
+  }
+
+  return {
+    resolveClientContext,
+    generateCaseStudy,
+    generateAuthorityPosts,
+    generateBreakdown,
+    queueProofContent,
+    updateMemoryAndLessons,
+    appendCloseLog,
+  };
 }
 
-module.exports = { createProofLoopActivities };
+module.exports = {
+  createProofLoopActivities,
+};
