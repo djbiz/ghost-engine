@@ -1,5 +1,7 @@
 'use strict';
 
+var idempotencyUtils = require('./idempotency-utils');
+
 const fs = require('fs');
 const path = require('path');
 
@@ -104,6 +106,15 @@ function createSundayEvolutionActivities(config) {
   }
 
   async function runSundayEvolution({ date }) {
+    var opts = arguments[arguments.length - 1] && typeof arguments[arguments.length - 1] === 'object' && arguments[arguments.length - 1].__idempotency ? arguments[arguments.length - 1] : {};
+    if (opts.idempotencyKey && idempotencyUtils.wasAlreadyProcessed(opts.idempotencyKey)) {
+      console.log('[SKIP] runSundayEvolution already processed for key: ' + opts.idempotencyKey);
+      return { skipped: true, reason: 'duplicate', idempotencyKey: opts.idempotencyKey };
+    }
+    if (typeof opts.expectedStateVersion === 'number') {
+      idempotencyUtils.checkAndBumpVersion('runSundayEvolution', opts.expectedStateVersion);
+    }
+
     console.log(`[sunday-evolution-activity] Starting evolution analysis for ${date}`);
 
     if (!fs.existsSync(crmPath)) {
@@ -126,6 +137,7 @@ function createSundayEvolutionActivities(config) {
     fs.appendFileSync(soulPath, report, 'utf-8');
 
     console.log(`[sunday-evolution-activity] Finished: ${rows.length} leads analyzed, ${lessons.length} lessons generated`);
+    if (opts.idempotencyKey) { idempotencyUtils.markProcessed(opts.idempotencyKey, 'runSundayEvolution'); }
     return { analyzed: true, leads: rows.length, lessons: lessons.length };
   }
 
