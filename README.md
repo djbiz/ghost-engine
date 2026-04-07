@@ -51,13 +51,13 @@ At its core sits **Zo** — an autonomous AI COO that monitors, learns, and adap
 
 Answer yes to all 3? Zo already sees the gap.
 
-- Do you have 5K+ followers?
+- Do you have 10K+ followers?
 - Are you posting consistently?
 - Are you NOT making consistent revenue?
 
 **If yes — Zo already sees the gap.**
 
-→ [Book your profile review](https://derekjamieson29.zo.space/ghost-engine)
+→ [Book your profile review](https://derekjamieson29.zo.space/ghost-engine/book)
 
 ---
 
