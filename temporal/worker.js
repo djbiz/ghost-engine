@@ -1,61 +1,67 @@
-'use strict';
-
 const { NativeConnection, Worker } = require('@temporalio/worker');
+const { getTemporalConfig, getTemporalConnectionOptions } = require('./config');
 const { createCampaignActivities } = require('./activities');
 const { createHeartbeatActivities } = require('./heartbeat-activities');
-const { createScoreDecayActivities } = require('./score-decay-activities');
-const { createSundayEvolutionActivities } = require('./sunday-evolution-activities');
-const { createNightlyConsolidationActivities } = require('./nightly-consolidation-activities');
-const { createProofLoopActivities } = require('./proof-loop-activities');
-const { createPipelineAutomationActivities } = require('./pipeline-automation-activities');
-const { createContentEngineActivities } = require('./content-engine-activities');
-const { createLinkedinEngagementActivities } = require('./linkedin-engagement-activities');
-const { createMomentumControllerActivities } = require('./momentum-controller-activities');
-const { setupTracing } = require('./observability');
-const config = require('./config');
+const { createOutboundChainActivities } = require('./outbound-chain-activities');
+const { createLinearActivities } = require('./linear-activities');
+const { createObservability } = require('./observability');
 
-async function run() {
-  await setupTracing('ghost-engine-worker');
-
-  const connection = await NativeConnection.connect({
-    address: config.temporalAddress,
+async function createCampaignWorker(overrides = {}) {
+  const config = getTemporalConfig(overrides.config || {});
+  const observability = overrides.observability || createObservability(config.serviceName, {
+    namespace: config.namespace,
+    taskQueue: config.taskQueue,
   });
-
-  const campaignActs = createCampaignActivities(config);
-  const heartbeatActs = createHeartbeatActivities(config);
-  const scoreDecayActs = createScoreDecayActivities(config);
-  const sundayEvolutionActs = createSundayEvolutionActivities(config);
-  const nightlyConsolidationActs = createNightlyConsolidationActivities(config);
-  const proofLoopActs = createProofLoopActivities(config);
-  const pipelineAutomationActs = createPipelineAutomationActivities(config);
-  const contentEngineActs = createContentEngineActivities(config);
-  const linkedinEngagementActs = createLinkedinEngagementActivities(config);
-  const momentumControllerActs = createMomentumControllerActivities(config);
+  const connection = overrides.connection || await NativeConnection.connect(
+    overrides.connectionOptions || getTemporalConnectionOptions(config),
+  );
 
   const worker = await Worker.create({
     connection,
-    namespace: config.temporalNamespace,
-    taskQueue: 'ghost-engine-campaigns',
+    namespace: config.namespace,
+    taskQueue: config.taskQueue,
     workflowsPath: require.resolve('./workflows'),
-    activities: {
-      ...campaignActs,
-      ...heartbeatActs,
-      ...scoreDecayActs,
-      ...sundayEvolutionActs,
-      ...nightlyConsolidationActs,
-      ...proofLoopActs,
-      ...pipelineAutomationActs,
-      ...contentEngineActs,
-      ...linkedinEngagementActs,
-      ...momentumControllerActs,
+    activities: overrides.activities || {
+      ...createCampaignActivities({
+        config,
+        observability,
+      }),
+      ...createHeartbeatActivities({
+        config,
+        observability,
+      }),
+      ...createOutboundChainActivities({
+        config,
+        observability,
+      }),
+      ...createLinearActivities({
+        config,
+        observability,
+      }),
     },
+    logger: observability.logger,
   });
 
-  console.log('Ghost-engine worker started on task queue: ghost-engine-campaigns');
-  await worker.run();
+  return { worker, connection, config, observability };
 }
 
-run().catch((err) => {
-  console.error('Worker failed:', err);
-  process.exit(1);
-});
+async function runCampaignWorker(overrides = {}) {
+  const { worker, connection, config, observability } = await createCampaignWorker(overrides);
+  observability.logger.info('temporal.worker.starting', {
+    address: config.address,
+    namespace: config.namespace,
+    taskQueue: config.taskQueue,
+    profile: config.profile,
+  });
+
+  try {
+    await worker.run();
+  } finally {
+    await connection?.close?.();
+  }
+}
+
+module.exports = {
+  createCampaignWorker,
+  runCampaignWorker,
+};

@@ -6,6 +6,7 @@ const {
   heartbeatNightlyWorkflow,
   heartbeatDataSyncWorkflow,
 } = require('./heartbeat-workflows');
+const { outboundChainWorkflow } = require('./outbound-chain-workflow');
 
 module.exports = {
   campaignWorkflow,
@@ -14,4 +15,5 @@ module.exports = {
   heartbeatFulfillmentWorkflow,
   heartbeatNightlyWorkflow,
   heartbeatDataSyncWorkflow,
+  outboundChainWorkflow,
 };
