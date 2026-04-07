@@ -3,6 +3,8 @@
 // Returns { runNightlyConsolidation }
 'use strict';
 
+var idempotencyUtils = require('./idempotency-utils');
+
 const fs = require('fs');
 const path = require('path');
 
@@ -39,6 +41,11 @@ function createNightlyConsolidationActivities(config) {
    * and writes metrics snapshot.
    */
   async function runNightlyConsolidation({ date }) {
+    var idempotencyKey = 'nightly-consolidation:' + (date || new Date().toISOString().slice(0, 10));
+    if (idempotencyUtils.alreadyProcessed(idempotencyKey)) {
+      return { skipped: true, reason: 'already processed', key: idempotencyKey };
+    }
+
     const today = date || new Date().toISOString().slice(0, 10);
 
     // --- Read source data ---
@@ -70,7 +77,7 @@ function createNightlyConsolidationActivities(config) {
       `| Leads Today | ${leadsToday} | ${today} |`,
       `| Conversations | ${conversations} | ${today} |`,
       `| Closed-Won | ${closedWon} | ${today} |`,
-      '<!-- KPI-STATUS-END-->',
+      '<!-- KPI-STATUSEND -->',
     ].join('\n');
 
     // --- Update system/IDENTITY.md ---
@@ -102,14 +109,16 @@ function createNightlyConsolidationActivities(config) {
     fs.mkdirSync(snapshotDir, { recursive: true });
     const snapshotPath = path.join(snapshotDir, 'metrics-snapshot.txt');
     const snapshot = [
-      `Metrics Snapshot — ${today}`,
-      '===============================',
+      `Metrics Snapshot —  ${today}`,
+      '================================',
       `Leads Today:   ${leadsToday}`,
       `Conversations: ${conversations}`,
       `Closed-Won:    ${closedWon}`,
       `Generated:     ${new Date().toISOString()}`,
     ].join('\n');
     fs.writeFileSync(snapshotPath, snapshot, 'utf-8');
+
+    idempotencyUtils.markProcessed(idempotencyKey);
 
     return { leadsToday, conversations, closedWon, date: today };
   }
