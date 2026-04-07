@@ -7,6 +7,9 @@ const {
   heartbeatDataSyncWorkflow,
 } = require('./heartbeat-workflows');
 const { outboundChainWorkflow } = require('./outbound-chain-workflow');
+const { pipelineLifecycleWorkflow } = require('./pipeline-lifecycle-workflow');
+const { proofLoopWorkflow } = require('./proof-loop-workflow');
+const { signalDetectionWorkflow } = require('./signal-detection-workflow');
 
 module.exports = {
   campaignWorkflow,
@@ -16,4 +19,7 @@ module.exports = {
   heartbeatNightlyWorkflow,
   heartbeatDataSyncWorkflow,
   outboundChainWorkflow,
+  pipelineLifecycleWorkflow,
+  proofLoopWorkflow,
+  signalDetectionWorkflow,
 };
