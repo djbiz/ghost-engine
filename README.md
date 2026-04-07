@@ -62,7 +62,7 @@ At its core sits **Zo** -- an autonomous AI COO that orchestrates 7 specialized 
 Zo is reviewing creator profiles daily.
 If yours qualifies, we'll map your monetization path — no pitch, no fluff.
 
-**[→ Submit Your Profile](https://calendly.com/derekjamieson)**
+**[→ Submit Your Profile](https://www.linkedin.com/messaging/compose/?to=https://www.linkedin.com/in/derekjamieson)**
 
 > This isn't a sales call. It's a filter. We only work with creators we can actually move.
 
