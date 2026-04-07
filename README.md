@@ -169,8 +169,8 @@ Already know you need this?
 
 | Offer | Price | Action |
 |-------|-------|--------|
-| **Quick Flip** | $990 | [Get it now →](https://derekjamieson29.zo.space/ghost-engine) |
-| **Full Engine** | $4,970 | [Get it now →](https://derekjamieson29.zo.space/ghost-engine) |
+| **Quick Flip** | $990 | [Get it now →](https://buy.stripe.com/00w9AVadm1BH0664xCbQY03) |
+| **Full Engine** | $4,970 | [Get it now →](https://buy.stripe.com/3cI28t4T26W12ee7JObQY04) |
 
 No call required. Direct buy. Zo handles fulfillment from day one.
 
