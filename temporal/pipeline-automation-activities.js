@@ -1,5 +1,7 @@
 'use strict';
 
+const { checkProcessed, markProcessed } = require('./idempotency-utils');
+
 const fs = require('fs');
 const path = require('path');
 
@@ -13,6 +15,13 @@ function createPipelineAutomationActivities(config) {
 
   async function runPipelineAutomation(input) {
     const { runId, date, hour } = input;
+
+    // Idempotency guard – skip if this runId was already processed
+    var alreadyProcessed = await checkProcessed(runId);
+    if (alreadyProcessed) {
+      console.log('[PipelineAutomation] Skipping already-processed runId: ' + runId);
+      return alreadyProcessed;
+    }
     const now = Date.now();
 
     if (!fs.existsSync(pipelineCsvPath)) {
@@ -86,6 +95,9 @@ function createPipelineAutomationActivities(config) {
     var reportPath = path.join(reportsDir, 'pipeline-report-' + date + '-' + hour + '.json');
     fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
     console.log('[PipelineAutomation] Report written: ' + reportPath);
+
+    // Mark this runId as processed for idempotency
+    await markProcessed(runId, report);
 
     return report;
   }
