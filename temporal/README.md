@@ -42,9 +42,19 @@ Ghost Engine's Temporal layer now covers Phase 3 (heartbeats) and Phase 4 (outbo
 - `temporal/linear-activities.js` - Linear API integration (update issue state, post comments)
 - `temporal/linear-webhook-listener.js` - thin HTTP server that receives Linear webhooks and starts workflows
 
+### Existing Activity Factories (restored in Phase 4 fix)
+- `temporal/score-decay-activities.js` - lead score decay over time
+- `temporal/sunday-evolution-activities.js` - weekly evolution report
+- `temporal/nightly-consolidation-activities.js` - nightly data consolidation
+- `temporal/proof-loop-activities.js` - legacy CRM-based proof loop (reads data/crm.csv)
+- `temporal/pipeline-automation-activities.js` - pipeline automation rules
+- `temporal/content-engine-activities.js` - content generation engine
+- `temporal/linkedin-engagement-activities.js` - LinkedIn engagement tracking
+- `temporal/momentum-controller-activities.js` - momentum tracking and control
+
 ### Shared
 - `temporal/workflows.js` - combined workflow export for the worker
-- `temporal/worker.js` - worker factory registering all activities
+- `temporal/worker.js` - worker factory registering all activities (Phase 2-4 + 8 existing factories)
 - `temporal/index.js` - barrel export
 
 ## Phase 3 coverage
