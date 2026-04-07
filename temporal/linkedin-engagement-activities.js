@@ -1,5 +1,7 @@
 'use strict';
 
+const { checkIdempotency, markProcessed } = require('./idempotency-utils');
+
 const fs = require('fs');
 const path = require('path');
 
@@ -70,6 +72,12 @@ function createLinkedinEngagementActivities(config = {}) {
   }
 
   async function runLinkedinEngagement(input) {
+    const idempotencyKey = `linkedin-engagement:${input.date}`;
+    const existing = await checkIdempotency(idempotencyKey);
+    if (existing) {
+      return existing;
+    }
+
     const { date, sandbox } = input;
     const history = loadHistory();
 
@@ -128,7 +136,7 @@ function createLinkedinEngagementActivities(config = {}) {
 
     saveHistory(history);
 
-    return {
+    const result = {
       date,
       metrics,
       rollingAverage,
@@ -136,6 +144,10 @@ function createLinkedinEngagementActivities(config = {}) {
       peakEngagementTimes: peakTimes,
       totalEntries: history.entries.length,
     };
+
+    await markProcessed(idempotencyKey, result);
+
+    return result;
   }
 
   return { runLinkedinEngagement };
