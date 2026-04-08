@@ -7,7 +7,7 @@
  * Nat Eliason's key insight: "Get the memory structure in first because
  * then your conversations from day one will be useful."
  *
- * Run order:
+ * ## Run order:
  *   1. Read MEMORY.md (long-term facts)
  *   2. Read today's daily note (if exists)
  *   3. Read leads/clients CRM (pipeline state)
@@ -17,6 +17,10 @@
 
 const fs = require("fs");
 const path = require("path");
+
+---
+
+## Bootstrap Sequence
 
 const BASE = "/home/workspace/Ghost-Monitization-Engine";
 const SYSTEM = path.join(BASE, "system");
