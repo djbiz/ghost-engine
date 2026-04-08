@@ -14,7 +14,8 @@
     "proof": "node scripts/proof-loop.js",
     "launch": "node scripts/launch-countdown.js",
     "temporal:bootstrap": "node scripts/temporal-bootstrap.js",
-    "temporal:worker": "node scripts/temporal-worker.js"
+    "temporal:worker": "node scripts/temporal-worker.js",
+    "test": "node scripts/memory-corruption-detector.js"
   },
   "keywords": [
     "ai",
