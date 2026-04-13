@@ -1,0 +1,22 @@
+{
+  "name": "@djbiz/temporal-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for Temporal Cloud — start workflows, monitor executions, signal and query running workflows",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@temporalio/client": "^1.11.0",
+    "@temporalio/proto": "^1.11.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "tsx": "^4.19.0",
+    "@types/node": "^22.0.0"
+  }
+}
