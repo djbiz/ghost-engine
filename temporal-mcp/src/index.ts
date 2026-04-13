@@ -1,10 +1,12 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { Connection, Client } from "@temporalio/client";
+import http from "node:http";
 
 // --- Config ---
 const TEMPORAL_ADDRESS =
@@ -509,10 +511,79 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 // --- Start ---
+const MODE = process.env.MCP_TRANSPORT || "sse"; // "stdio" or "sse"
+const PORT = parseInt(process.env.PORT || "3100", 10);
+
 async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error("Temporal MCP server running on stdio");
+  if (MODE === "stdio") {
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    console.error("Temporal MCP server running on stdio");
+    return;
+  }
+
+  // SSE mode — HTTP server with /sse and /message endpoints
+  const activeSessions = new Map<string, SSEServerTransport>();
+
+  const httpServer = http.createServer(async (req, res) => {
+    // CORS headers
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+    if (req.method === "OPTIONS") {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+
+    // Health check
+    if (req.method === "GET" && req.url === "/health") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ status: "ok", tools: TOOLS.length }));
+      return;
+    }
+
+    // SSE connection endpoint
+    if (req.method === "GET" && req.url === "/sse") {
+      const transport = new SSEServerTransport("/message", res);
+      activeSessions.set(transport.sessionId, transport);
+
+      res.on("close", () => {
+        activeSessions.delete(transport.sessionId);
+      });
+
+      await server.connect(transport);
+      return;
+    }
+
+    // Message endpoint for SSE clients
+    if (req.method === "POST" && req.url?.startsWith("/message")) {
+      const url = new URL(req.url, `http://localhost:${PORT}`);
+      const sessionId = url.searchParams.get("sessionId");
+
+      if (!sessionId || !activeSessions.has(sessionId)) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Invalid or missing sessionId" }));
+        return;
+      }
+
+      const transport = activeSessions.get(sessionId)!;
+      await transport.handlePostMessage(req, res);
+      return;
+    }
+
+    // 404
+    res.writeHead(404, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Not found" }));
+  });
+
+  httpServer.listen(PORT, () => {
+    console.error(`Temporal MCP server running on http://0.0.0.0:${PORT}`);
+    console.error(`  SSE endpoint:     GET  /sse`);
+    console.error(`  Message endpoint: POST /message?sessionId=...`);
+    console.error(`  Health check:     GET  /health`);
+  });
 }
 
 main().catch((err) => {
