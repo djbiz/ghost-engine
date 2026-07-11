@@ -1,297 +1,120 @@
 # Ghost Engine
 
-## Live System Snapshot
+**Durable execution runtime for VOX.**
 
-| Metric | Value |
-|--------|-------|
-| Leads Contacted (Last 24h) | 10 |
-| Replies | 3 |
-| Calls Booked | 1 |
-| Deals Closed | 0 (warming phase) |
-| System Status | ACTIVE |
-
-Movement = belief
-
-## 🚀 Launch Status — April 6, 2026
-
-| Component | Status |
-|-----------|--------|
-| Offer ladder | ✅ Live ($990 / $4,970 / $9,700) |
-| Email outreach engine | ✅ GetResponse connected |
-| Domain rotation + warmup | ✅ 3 domains configured |
-| CRM + lead pipeline | ✅ 10 leads, 1 active client |
-| Daily runner | ✅ Auto-check + pipeline alert |
-| Video audit generator | ✅ Personalized scripts |
-| LinkedIn DMs | ⏳ Unlocks ~April 10-11 |
-| Video recording | ⏳ Waiting on Derek to film |
-
-**AI-Powered Monetization Engine for Creators and Operators**
-
-> Built by Derek Jamieson — Powered by Zo, the autonomous AI COO.
-
-Zo monitors, learns, and adapts daily based on real interactions.
-
-Zo is reviewing profiles daily. If yours qualifies, we'll map your monetization path.
+Ghost Engine is a Temporal-backed worker that runs long-lived, stateful workflows on behalf of VOX. It does not decide anything. It does not own customers. It executes named capabilities and returns results.
 
 ---
 
-## What is Ghost Engine?
-
-Multi-agent AI system that turns creator attention into backend revenue. Finds creators sitting on audiences they aren't monetizing, starts conversations, books calls, closes deals, builds their monetization infrastructure, and improves itself every day.
-
-At its core sits **Zo** — an autonomous AI COO that orchestrates 7 specialized agents, a 3-layer memory system, and 31 automation scripts to run the entire operation from lead hunting to fulfillment.
-
-**Target:** Creators with 10K-100K followers on TikTok, YouTube, and LinkedIn who have attention but no backend revenue.
-
----
-
-## Should Zo Flag You?
-
-- Do you have 5K+ followers?
-- Are you posting consistently?
-- Are you NOT making consistent revenue?
-
-If yes — Zo already sees the gap.
-
-[Book a call](https://your-book-a-call-link.example)
-
----
-
-## Skip the Call
-
-If you already know you need this:
-
-- Quick Flip → $990
-- Full Engine → $4,970
-
-Direct buy option:
-
-- [Quick Flip checkout](https://your-stripe-checkout-link.example/quick-flip) (Stripe link placeholder)
-- [Full Engine checkout](https://your-stripe-checkout-link.example/full-engine) (Stripe link placeholder)
-
----
-
-## Content Engine Note
-
-Every repo update becomes a LinkedIn post.
-
-Examples:
-- Just updated decision rules — close rate should increase
-- System now auto-follows up leads after 48h
-- Added new scoring model — filtering better leads now
-
-Ship the code, ship the proof.
-
----
-
-## What We're Learning
-
-- Generic DMs don't convert
-- Creators with no offer take longer to close
-- Fast replies = higher close rate
-
----
-
-## Architecture
+## Role in the VOX architecture
 
 ```
-        ZO (AI COO) -- Street-smart operator AI
-              |
-    +---------+---------+
-    |         |         |
-  MEMORY    AGENTS   EXECUTION
-  LAYER     LAYER     LAYER
-
-  SOUL.md    Lead Hunter    31 JS/Python
-  IDENTITY   Closer Engine  scripts
-  BOOTSTRAP  Fulfillment    Stripe, GetResp
-             Consolidator   Calendly, LI API
-             Evolution      CRM + Pipelines
-             LI Daily
-             LI Outreach
+VOX               →  thinks, decides, recommends
+Runner            →  coordinates, routes, manages lifecycle
+Activepieces      →  connects to external APIs (CRM, Slack, ClickUp, Notion, email, etc.)
+Ghost Engine      →  persists difficult work (durable workflows, retries, compensation, checkpointing)
 ```
 
-Memory Flow: SOUL.md --> IDENTITY.md --> BOOTSTRAP.md
+Every action Ghost Engine executes originates from a VOX decision, is approved through Runner, and is dispatched with an explicit capability contract.
 
 ---
 
-## Quick Start
+## What Ghost Engine is for
 
-```bash
-git clone https://github.com/djbiz/ghost-engine.git && cd ghost-engine
-npm install
-cp .env.example .env   # Add your API keys
-npm start
+Use Ghost Engine when the work is:
+
+- **Long-running** — spans hours or days
+- **Stateful** — requires resumption after crash or restart
+- **Retry-heavy** — needs deterministic backoff and compensation
+- **Multi-step with branching** — where a linear automation flow is the wrong shape
+
+Reference workload: the outbound chain (lead qualified → wait 24h → check state → branch → retry / escalate / complete).
+
+## What Ghost Engine is not for
+
+Anything that fits inside an Activepieces flow. That includes:
+
+- CRM record creates and updates
+- Slack, iMessage, WhatsApp messages
+- ClickUp task creation
+- Notion page updates
+- Standard API calls
+- Lead routing
+- Email dispatch
+
+If Activepieces can do it in one flow, Activepieces owns it.
+
+---
+
+## Non-negotiable rules
+
+Ghost Engine must not:
+
+1. Make strategic decisions
+2. Generate autonomous business priorities
+3. Override VOX governance
+4. Contact customers without an approved capability call
+5. Modify VOX memory or governance files
+6. Create its own objectives
+
+The `Zo autonomous COO` positioning is retired. See `legacy/` for the archived version.
+
+---
+
+## Capability contract
+
+Every request into Ghost Engine carries:
+
+```
+request_id
+capability_name
+requested_action
+approval_state
+source_context
+timestamp
 ```
 
----
+Every response returns:
 
-## Directory Structure
-
-| Directory | Purpose |
-|-----------|---------|
-| `system/` | 3-layer memory: BOOTSTRAP.md, IDENTITY.md, SOUL.md, HEARTBEAT.md, USER.md |
-| `scripts/` | 31 JS/Python automation scripts (outreach, CRM, leads, closing, KPI) |
-| `leads/` | CRM pipeline — scored and qualified leads |
-| `offers/` | Offer templates for Quick Flip, Full Engine, Ghost Partner |
-| `sequences/` | Email/DM outreach sequences |
-| `proof/` | Case study templates, social proof assets |
-| `commands/` | Command layer (DOUBLE DOWN / KILL / TEST directives) |
-| `daily/` | Daily operation logs and heartbeat records |
-| `clients/` | Client delivery tracking and fulfillment records |
-| `assets/` | Content bank, DM templates, ad creatives |
-
----
-
-## Agents
-
-| # | Agent | Schedule | Role |
-|---|-------|----------|------|
-| 1 | **Lead Hunter** | Daily 7:30 AM | Scrapes TikTok/YouTube/LinkedIn for creators with 10K-100K followers |
-| 2 | **Closer Engine** | Daily 9:00 AM | Works leads through DM/email sequences, books discovery calls |
-| 3 | **Fulfillment** | Daily 11:00 AM | Builds monetization backends — offer pages, email funnels, payment links |
-| 4 | **Nightly Consolidator** | Daily 11:00 PM | Reviews the day, updates CRM scores, writes daily heartbeat |
-| 5 | **Sunday Evolution** | Sundays 8:00 PM | Weekly self-improvement — analyzes patterns, updates SOUL.md |
-| 6 | **LinkedIn Daily** | Daily 9:00 AM | Posts content, engages with target creators, builds inbound authority |
-| 7 | **LinkedIn Outreach** | Daily 9:00 AM | Direct outreach to qualified LinkedIn leads via connection requests |
-
----
-
-## Offer Tiers
-
-| Tier | Price | Delivery | What They Get |
-|------|-------|----------|---------------|
-| **Quick Flip** | $990 | 48 hours | Offer page + payment link + 3 email sequences |
-| **Full Engine** | $4,970 | 14 days | Full monetization backend + landing pages + automations |
-| **Ghost Partner** | $9,700 + 15% rev share | 90 days | Complete business build + ongoing optimization |
-
-Monthly target: 16 closes = $49,180 revenue.
-
----
-
-## Daily Heartbeat Schedule
-
-7:30 AM Lead Hunter --> 9:00 AM Closer + LinkedIn --> 11:00 AM Fulfillment --> 11:00 PM Consolidator --> Sunday 8:00 PM Evolution
-
----
-
-## 30-Day Execution Phases
-
-1. **Close Heavy** (Week 1-2): Target $10-20K in Quick Flip and Full Engine sales
-2. **Proof Domination** (Week 2-3): Build case studies from first clients
-3. **Inbound Engine** (Week 3-4): LinkedIn content + paid traffic generating inbound leads
-4. **High-Ticket Layer** (Week 4+): Introduce Ghost Partner tier, scale to $50K/month
-
----
-
-## Environment Variables
-
-```bash
-OPENAI_API_KEY=         # GPT-4 for agent intelligence
-GETRESPONSE_API_KEY=    # Email automation
-STRIPE_SECRET_KEY=      # Payment processing
-CALENDLY_TOKEN=         # Discovery call booking
-LINKEDIN_ACCESS_TOKEN=  # LinkedIn API
-TIKTOK_API_KEY=         # TikTok scraping
-YOUTUBE_API_KEY=        # YouTube data
+```
+request_id
+capability_name
+execution_status
+result
+errors
+timestamp
+learning_data
 ```
 
+See `VOX-CONTRACT.md` for the full governance boundary.
+
 ---
 
-## Tech Stack
+## Repository status
 
-Node.js, Python, OpenAI GPT44, GetResponse (email), Stripe (payments), Calendly (booking), LinkedIn API, TikTok API, YouTube Data API
+- **Runtime:** Temporal worker
+- **Language:** Node.js
+- **Last significant change:** 2026-04-12 (pre-VOX architecture)
+- **Current phase:** Reconciliation — identity updated; code audit and VOX integration pending
+
+## Directory layout (target state)
+
+```
+ghost-engine/
+├── capabilities/       # Named, approved capabilities Ghost Engine executes
+├── workflows/          # Temporal workflow definitions
+├── activities/         # Temporal activity implementations
+├── adapters/           # Connections to Activepieces, HubSpot, Airtable, etc.
+├── telemetry/          # Execution logs, learning_data emission
+├── legacy/             # Archived Zo / autonomous COO era code
+├── VOX-CONTRACT.md     # Governance boundary
+└── README.md
+```
+
+Everything outside `legacy/` must conform to the capability contract.
 
 ---
 
 ## License
 
-Proprietary. (c) 2025 Derek Jamieson. All rights reserved.
-
----
-
-## 🔥 Live System Snapshot
-
-| Metric | Value |
-|--------|-------|
-| Leads Contacted (Last 24h) | 10 |
-| Replies | 3 |
-| Calls Booked | 1 |
-| Deals Closed | 0 (warming phase) |
-| System Status | ✅ ACTIVE |
-
-> Movement = belief. Zo is live and operating.
-
----
-
-## 🧠 Should Zo Flag You?
-
-Ask yourself:
-- Do you have **5K+ followers**?
-- Are you **posting consistently**?
-- Are you **NOT making consistent revenue**?
-
-If yes — **Zo already sees the gap.**
-
-👉 [Book a call](https://calendly.com/YOUR_LINK) — before Zo moves to the next profile.
-
----
-
-## ⚡ Ready to Move?
-
-> Zo is reviewing profiles daily. If yours qualifies, we'll map your monetization path.
-
-This isn't a pitch — it's a filter. We only work with creators who are ready.
-
-👉 [See if you qualify](https://calendly.com/YOUR_LINK)
-
----
-
-## 💰 Skip the Call
-
-Already know you need this? Go direct:
-
-| Package | Price | Link |
-|---------|-------|------|
-| **Quick Flip** | $990 | [Buy Now](https://buy.stripe.com/YOUR_QUICK_FLIP_LINK) |
-| **Full Engine** | $4,970 | [Buy Now](https://buy.stripe.com/YOUR_FULL_ENGINE_LINK) |
-
-> No call needed. No waiting. Just results.
-
----
-
-## 🧪 What We're Learning
-
-Real insights from real outreach:
-
-- **Generic DMs don't convert.** Personalization is non-negotiable.
-- **Creators with no offer take longer to close.** We prioritize those with existing products.
-- **Fast replies = higher close rate.** Speed signals intent.
-- **LinkedIn engagement > follower count.** Active posters convert better.
-
-> This section updates as Zo processes more data.
-
----
-
-## 🤖 About Zo
-
-Zo is not a tool. Zo is not a bot.
-
-**Zo monitors, learns, and adapts daily based on real interactions.**
-
-Every conversation, every reply pattern, every close — feeds back into the system. Zo gets sharper with each cycle.
-
-> Zo operates independently. You're looking at a living system.
-
----
-
-## 📡 Content Engine
-
-Every repo update = a LinkedIn post.
-
-Recent examples:
-- *"Just updated decision rules — close rate should increase."*
-- *"System now auto-follows up leads after 48h."*
-- *"Added new scoring model — filtering better leads now."*
-
-> Follow the commits. Follow the progress. This repo is the content.
+Proprietary. © 2026 Derek Jamieson. All rights reserved.
